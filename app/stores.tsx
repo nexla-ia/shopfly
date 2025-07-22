@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Search, Star, Clock, MapPin, Filter } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 
 const { width } = Dimensions.get('window');
 
@@ -36,11 +37,11 @@ export default function StoresScreen() {
   const [stores, setStores] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchStores();
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchStores();
   }, [searchQuery, selectedCategory]);
 

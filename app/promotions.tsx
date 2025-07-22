@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Star, ShoppingCart, Clock, Zap } from 'lucide-react-native';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 
 const { width } = Dimensions.get('window');
 
@@ -23,7 +24,7 @@ export default function PromotionsScreen() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchPromotionProducts();
   }, []);
 

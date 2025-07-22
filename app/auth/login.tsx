@@ -12,13 +12,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { signIn, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -26,19 +27,17 @@ export default function LoginScreen() {
       return;
     }
 
-    setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const result = await signIn(email, password);
       
-      // Mock authentication - in real app, validate with API
-      if (email === 'user@test.com' && password === '123456') {
-        router.replace('/(tabs)');
+      if (result?.error) {
+        Alert.alert('Erro', result.error.message || 'Email ou senha incorretos');
       } else {
-        Alert.alert('Erro', 'Email ou senha incorretos');
+        router.replace('/(tabs)');
       }
-    }, 1500);
+    } catch (error) {
+      Alert.alert('Erro', 'Ocorreu um erro inesperado. Tente novamente.');
+    }
   };
 
   return (
@@ -101,12 +100,12 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+              style={[styles.loginButton, authLoading && styles.loginButtonDisabled]}
               onPress={handleLogin}
-              disabled={loading}
+              disabled={authLoading}
             >
               <Text style={styles.loginButtonText}>
-                {loading ? 'Entrando...' : 'Entrar'}
+                {authLoading ? 'Entrando...' : 'Entrar'}
               </Text>
             </TouchableOpacity>
 

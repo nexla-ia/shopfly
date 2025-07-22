@@ -14,6 +14,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Star, Clock, MapPin, Phone, MessageCircle, ShoppingCart } from 'lucide-react-native';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 
 const { width } = Dimensions.get('window');
 
@@ -26,7 +27,7 @@ export default function StoreScreen() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (id) {
       fetchStore();
       fetchStoreProducts();

@@ -13,9 +13,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { User, Mail, Lock, Eye, EyeOff, Phone, MapPin } from 'lucide-react-native';
+import { useAuth } from '@/context/AuthContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { signUp, loading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,7 +28,6 @@ export default function RegisterScreen() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
     const { name, email, phone, address, password, confirmPassword } = formData;
@@ -46,19 +47,25 @@ export default function RegisterScreen() {
       return;
     }
 
-    setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      Alert.alert(
-        'Sucesso',
-        'Conta criada com sucesso!',
-        [
-          { text: 'OK', onPress: () => router.replace('/auth/login') }
-        ]
-      );
-    }, 1500);
+    try {
+      const result = await signUp(email, password, {
+        fullName: name,
+        phone,
+        city: address,
+      });
+      
+      if (result?.error) {
+        Alert.alert('Erro', result.error.message || 'Não foi possível criar a conta');
+      } else {
+        Alert.alert(
+          'Sucesso',
+          'Conta criada com sucesso! Verifique seu email para confirmar.',
+          [{ text: 'OK', onPress: () => router.replace('/auth/login') }]
+        );
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Ocorreu um erro inesperado. Tente novamente.');
+    }
   };
 
   const updateFormData = (key: string, value: string) => {
@@ -178,12 +185,12 @@ export default function RegisterScreen() {
               </View>
 
               <TouchableOpacity
-                style={[styles.registerButton, loading && styles.registerButtonDisabled]}
+                style={[styles.registerButton, authLoading && styles.registerButtonDisabled]}
                 onPress={handleRegister}
-                disabled={loading}
+                disabled={authLoading}
               >
                 <Text style={styles.registerButtonText}>
-                  {loading ? 'Criando conta...' : 'Criar conta'}
+                  {authLoading ? 'Criando conta...' : 'Criar conta'}
                 </Text>
               </TouchableOpacity>
 

@@ -16,6 +16,7 @@ import { ThumbsUp, MessageCircle, Filter } from 'lucide-react-native';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useFavorites } from '@/context/FavoritesContext';
+import { supabase } from '@/lib/supabase';
 
 const { width } = Dimensions.get('window');
 
@@ -39,7 +40,8 @@ export default function ProductScreen() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [likedReviews, setLikedReviews] = useState<string[]>([]);
   const { addToFavorites, removeFromFavorites, isFavorite: isProductFavorite, loading: favoritesLoading } = useFavorites();
-  useEffect(() => {
+  
+  React.useEffect(() => {
     if (id) {
       fetchProduct();
       fetchReviews();
@@ -251,17 +253,7 @@ export default function ProductScreen() {
   );
 
   const getAvailabilityInfo = () => {
-    if (!product) return { text: 'Carregando...', color: '#6B7280' };
-    
-    const stockQuantity = product.stock_quantity || 0;
-    
-    if (stockQuantity > 10) {
-      return { text: 'Em estoque', color: '#10B981' };
-    } else if (stockQuantity > 0) {
-      return { text: 'Últimas unidades', color: '#F59E0B' };
-    } else {
-      return { text: 'Fora de estoque', color: '#EF4444' };
-    }
+    return { text: 'Em estoque', color: '#10B981' };
   };
 
   if (loading) {

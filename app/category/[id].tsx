@@ -13,6 +13,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Filter, Star, ShoppingCart, SlidersHorizontal } from 'lucide-react-native';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 
 const { width } = Dimensions.get('window');
 
@@ -47,11 +48,11 @@ export default function CategoryScreen() {
 
   const categoryName = categoryNames[id as string] || 'Categoria';
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchProducts();
   }, [id]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchProducts();
   }, [sortBy]);
 

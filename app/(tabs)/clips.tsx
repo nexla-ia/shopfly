@@ -19,7 +19,7 @@ export default function ClipsScreen() {
   const [clips, setClips] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     // Por enquanto, deixar vazio já que não temos dados reais de clips
     setClips([]);
   }, []);

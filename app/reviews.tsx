@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Star, Search, Filter, CreditCard as Edit3, Trash2, Camera, Send } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 
 const statusConfig = {
   published: { label: 'Publicada', color: '#10B981', bgColor: '#D1FAE5' },
@@ -38,7 +39,7 @@ export default function ReviewsScreen() {
     images: [] as string[],
   });
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetchReviews();
     fetchPendingReviews();
   }, []);
