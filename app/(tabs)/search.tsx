@@ -17,158 +17,6 @@ import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  rating: number;
-  category: string;
-  store: string;
-  originalPrice?: number;
-}
-
-const mockProducts: Product[] = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440001',
-    name: 'Smartphone Samsung Galaxy A54',
-    price: 1299.99,
-    originalPrice: 1599.99,
-    image: 'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.8,
-    category: 'Eletrônicos',
-    store: 'Loja de Eletrônicos Tech'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440002',
-    name: 'Notebook Dell Inspiron 15',
-    price: 2799.99,
-    image: 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    category: 'Eletrônicos',
-    store: 'Loja de Eletrônicos Tech'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440007',
-    name: 'Arroz Integral Tio João 1kg',
-    price: 8.99,
-    image: 'https://images.pexels.com/photos/33239/rice-grain-food-raw.jpg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.5,
-    category: 'Supermercado',
-    store: 'Supermercado Central'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440008',
-    name: 'Feijão Preto Camil 1kg',
-    price: 7.49,
-    image: 'https://images.pexels.com/photos/4198564/pexels-photo-4198564.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    category: 'Supermercado',
-    store: 'Supermercado Central'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440017',
-    name: 'Dipirona 500mg - 20 comprimidos',
-    price: 12.99,
-    image: 'https://images.pexels.com/photos/3683080/pexels-photo-3683080.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.9,
-    category: 'Farmácia',
-    store: 'Farmácia Saúde+'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440018',
-    name: 'Vitamina C 500mg - 30 cápsulas',
-    price: 24.99,
-    image: 'https://images.pexels.com/photos/3683070/pexels-photo-3683070.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.8,
-    category: 'Farmácia',
-    store: 'Farmácia Saúde+'
-  },
-  // Produtos de Casa
-  {
-    id: '550e8400-e29b-41d4-a716-446655440009',
-    name: 'Sofá 3 Lugares Cinza Moderno',
-    price: 1299.99,
-    originalPrice: 1599.99,
-    image: 'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    category: 'Casa',
-    store: 'Casa & Decoração'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440010',
-    name: 'Mesa de Jantar 6 Lugares Madeira',
-    price: 899.99,
-    originalPrice: 1199.99,
-    image: 'https://images.pexels.com/photos/1080721/pexels-photo-1080721.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.4,
-    category: 'Casa',
-    store: 'Casa & Decoração'
-  },
-  // Produtos de Moda
-  {
-    id: '550e8400-e29b-41d4-a716-446655440011',
-    name: 'Vestido Floral Verão Feminino',
-    price: 89.99,
-    originalPrice: 129.99,
-    image: 'https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    category: 'Moda',
-    store: 'Moda & Estilo'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440012',
-    name: 'Tênis Esportivo Masculino Preto',
-    price: 199.99,
-    originalPrice: 249.99,
-    image: 'https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.5,
-    category: 'Moda',
-    store: 'Moda & Estilo'
-  },
-  // Produtos de Beleza
-  {
-    id: '550e8400-e29b-41d4-a716-446655440013',
-    name: 'Kit Skincare Facial Completo',
-    price: 149.99,
-    originalPrice: 199.99,
-    image: 'https://images.pexels.com/photos/3685530/pexels-photo-3685530.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.8,
-    category: 'Beleza',
-    store: 'Beleza Natural'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440014',
-    name: 'Perfume Feminino Floral 100ml',
-    price: 89.99,
-    image: 'https://images.pexels.com/photos/965989/pexels-photo-965989.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    category: 'Beleza',
-    store: 'Beleza Natural'
-  },
-  // Produtos de Esportes
-  {
-    id: '550e8400-e29b-41d4-a716-446655440015',
-    name: 'Bicicleta Mountain Bike Aro 29',
-    price: 1599.99,
-    originalPrice: 1999.99,
-    image: 'https://images.pexels.com/photos/100582/pexels-photo-100582.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    category: 'Esportes',
-    store: 'Esportes Total'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440016',
-    name: 'Kit Halteres 20kg Musculação',
-    price: 299.99,
-    originalPrice: 399.99,
-    image: 'https://images.pexels.com/photos/416717/pexels-photo-416717.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.4,
-    category: 'Esportes',
-    store: 'Esportes Total'
-  }
-];
-
 const categories = [
   { id: 'all', name: 'Todos' },
   { id: 'supermarket', name: 'Supermercado' },
@@ -186,86 +34,121 @@ export default function SearchScreen() {
   const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(params.category || 'all');
-  const [filteredProducts, setFilteredProducts] = useState(mockProducts);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Buscar produtos do Supabase
   useEffect(() => {
-    filterProducts();
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
   }, [searchQuery, selectedCategory]);
 
-  // Definir categoria inicial baseada no parâmetro da URL
   useEffect(() => {
     if (params.category && typeof params.category === 'string') {
       setSelectedCategory(params.category);
     }
   }, [params.category]);
 
-  const filterProducts = () => {
-    let filtered = mockProducts;
+  const fetchProducts = async () => {
+    setLoading(true);
+    
+    let query = supabase
+      .from('products')
+      .select(`
+        id,
+        name,
+        price,
+        original_price,
+        images,
+        rating,
+        reviews_count,
+        category,
+        stores ( name )
+      `)
+      .eq('is_active', true);
 
     if (searchQuery) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      query = query.ilike('name', `%${searchQuery}%`);
     }
 
     if (selectedCategory !== 'all') {
-      // Mapear IDs das categorias para os valores usados nos produtos
       const categoryMap: { [key: string]: string } = {
-        'supermarket': 'Supermercado',
-        'home': 'Casa',
-        'fashion': 'Moda',
-        'beauty': 'Beleza',
-        'electronics': 'Eletrônicos',
-        'sports': 'Esportes',
+        'supermarket': 'supermarket',
+        'home': 'home',
+        'fashion': 'fashion',
+        'beauty': 'beauty',
+        'electronics': 'electronics',
+        'sports': 'sports',
       };
       
       const categoryName = categoryMap[selectedCategory];
       if (categoryName) {
-        filtered = filtered.filter(product => product.category === categoryName);
+        query = query.eq('category', categoryName);
       }
     }
 
-    setFilteredProducts(filtered);
+    const { data, error } = await query.limit(50);
+
+    if (error) {
+      console.error('Erro ao buscar produtos:', error);
+      setProducts([]);
+    } else {
+      setProducts(data || []);
+    }
+    
+    setLoading(false);
   };
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: any) => {
+    const productImage = product.images && product.images.length > 0 ? product.images[0] : '';
+    
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
-      image: product.image,
+      price: Number(product.price),
+      image: productImage,
       quantity: 1,
-      store: product.store
+      store: product.stores?.name || 'Loja'
     });
   };
 
-  const renderProduct = ({ item }: { item: Product }) => (
+  const renderProduct = ({ item }: { item: any }) => {
+    const productImage = item.images && item.images.length > 0 ? item.images[0] : '';
+    const productPrice = Number(item.price);
+    const originalPrice = item.original_price ? Number(item.original_price) : undefined;
+    const discount = originalPrice ? Math.round((1 - productPrice / originalPrice) * 100) : undefined;
+    const storeName = item.stores?.name || 'Loja';
+    
+    return (
     <TouchableOpacity
       style={[styles.productCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
       onPress={() => router.push(`/product/${item.id}`)}
     >
-      <Image source={{ uri: item.image }} style={styles.productImage} />
-      {item.originalPrice && (
+      <Image source={{ uri: productImage }} style={styles.productImage} />
+      {discount && (
         <View style={styles.discountBadge}>
           <Text style={styles.discountText}>
-            {Math.round((1 - item.price / item.originalPrice) * 100)}% OFF
+            {discount}% OFF
           </Text>
         </View>
       )}
       <View style={styles.productInfo}>
         <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>{item.name}</Text>
-        <Text style={[styles.storeName, { color: colors.textSecondary }]}>{item.store}</Text>
+        <Text style={[styles.storeName, { color: colors.textSecondary }]}>{storeName}</Text>
         <View style={styles.ratingContainer}>
           <Star size={12} color="#FFC107" fill="#FFC107" />
-          <Text style={[styles.rating, { color: colors.text }]}>{item.rating}</Text>
+          <Text style={[styles.rating, { color: colors.text }]}>{item.rating || 0}</Text>
+          <Text style={[styles.reviews, { color: colors.textSecondary }]}>({item.reviews_count || 0})</Text>
         </View>
         <View style={styles.priceContainer}>
-          {item.originalPrice && (
-            <Text style={[styles.originalPrice, { color: colors.textSecondary }]}>R$ {item.originalPrice.toFixed(2)}</Text>
+          {originalPrice && (
+            <Text style={[styles.originalPrice, { color: colors.textSecondary }]}>R$ {originalPrice.toFixed(2)}</Text>
           )}
-          <Text style={styles.price}>R$ {item.price.toFixed(2)}</Text>
+          <Text style={styles.price}>R$ {productPrice.toFixed(2)}</Text>
         </View>
         <TouchableOpacity
           style={[styles.addToCartButton, { backgroundColor: colors.primary }]}
@@ -276,7 +159,8 @@ export default function SearchScreen() {
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
-  );
+    );
+  };
 
   const renderCategory = ({ item }: { item: any }) => (
     <TouchableOpacity
@@ -340,18 +224,29 @@ export default function SearchScreen() {
       {/* Results */}
       <View style={[styles.resultsContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <Text style={[styles.resultsText, { color: colors.textSecondary }]}>
-          {filteredProducts.length} produtos encontrados
+          {loading ? 'Buscando...' : `${products.length} produtos encontrados`}
         </Text>
       </View>
 
       {/* Products Grid */}
       <FlatList
-        data={filteredProducts}
+        data={products}
         renderItem={renderProduct}
         keyExtractor={(item) => item.id}
         numColumns={2}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.productsList}
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Carregando produtos...</Text>
+            </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Nenhum produto encontrado</Text>
+            </View>
+          )
+        }
       />
     </SafeAreaView>
   );
@@ -516,5 +411,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+  },
+  reviews: {
+    marginLeft: 3,
+    fontSize: 11,
   },
 });

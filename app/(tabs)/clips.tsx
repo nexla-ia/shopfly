@@ -14,69 +14,17 @@ import { Play, Heart, Share, MessageCircle } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
-interface Clip {
-  id: string;
-  title: string;
-  thumbnail: string;
-  duration: string;
-  views: string;
-  likes: string;
-  seller: string;
-  product: string;
-  price: number;
-}
-
-const mockClips: Clip[] = [
-  {
-    id: '1',
-    title: 'Unboxing iPhone 15 Pro Max - Vale a pena?',
-    thumbnail: 'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=400',
-    duration: '2:34',
-    views: '125K',
-    likes: '8.2K',
-    seller: 'TechStore Oficial',
-    product: 'iPhone 15 Pro Max 256GB',
-    price: 8999.99
-  },
-  {
-    id: '2',
-    title: 'Review completo do Galaxy S24 Ultra',
-    thumbnail: 'https://images.pexels.com/photos/1194713/pexels-photo-1194713.jpeg?auto=compress&cs=tinysrgb&w=400',
-    duration: '4:12',
-    views: '89K',
-    likes: '5.7K',
-    seller: 'Samsung Brasil',
-    product: 'Galaxy S24 Ultra 512GB',
-    price: 7299.99
-  },
-  {
-    id: '3',
-    title: 'Como escolher o notebook ideal para trabalho',
-    thumbnail: 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=400',
-    duration: '6:45',
-    views: '234K',
-    likes: '12.1K',
-    seller: 'Dell Oficial',
-    product: 'Dell Inspiron 15 i5 16GB',
-    price: 3299.99
-  },
-  {
-    id: '4',
-    title: 'Testando fones gamer por 24h seguidas',
-    thumbnail: 'https://images.pexels.com/photos/3394650/pexels-photo-3394650.jpeg?auto=compress&cs=tinysrgb&w=400',
-    duration: '8:23',
-    views: '67K',
-    likes: '4.3K',
-    seller: 'HyperX Store',
-    product: 'HyperX Cloud Alpha S',
-    price: 599.99
-  }
-];
-
 export default function ClipsScreen() {
   const router = useRouter();
+  const [clips, setClips] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const renderClip = (clip: Clip) => (
+  useEffect(() => {
+    // Por enquanto, deixar vazio já que não temos dados reais de clips
+    setClips([]);
+  }, []);
+
+  const renderClip = (clip: any) => (
     <TouchableOpacity
       key={clip.id}
       style={styles.clipCard}
@@ -125,6 +73,16 @@ export default function ClipsScreen() {
     </TouchableOpacity>
   );
 
+  const renderEmptyClips = () => (
+    <View style={styles.emptyClips}>
+      <Play size={80} color="#E5E7EB" />
+      <Text style={styles.emptyClipsTitle}>Nenhum clip disponível</Text>
+      <Text style={styles.emptyClipsText}>
+        Os clips de produtos aparecerão aqui em breve
+      </Text>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -132,11 +90,15 @@ export default function ClipsScreen() {
         <Text style={styles.headerSubtitle}>Descubra produtos através de vídeos</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.clipsContainer}>
-          {mockClips.map(renderClip)}
-        </View>
-      </ScrollView>
+      {clips.length === 0 ? (
+        renderEmptyClips()
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.clipsContainer}>
+            {clips.map(renderClip)}
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -275,5 +237,23 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
+  },
+  emptyClips: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyClipsTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#333',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  emptyClipsText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
 });

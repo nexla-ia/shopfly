@@ -19,89 +19,6 @@ import { useFavorites } from '@/context/FavoritesContext';
 
 const { width } = Dimensions.get('window');
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  images: string[];
-  discount?: number;
-  rating: number;
-  reviews: number;
-  store: string;
-  description: string;
-  specifications: { [key: string]: string };
-  availability: 'in_stock' | 'low_stock' | 'out_of_stock';
-  freeShipping: boolean;
-  installments?: string;
-}
-
-interface Review {
-  id: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  date: string;
-  helpful: number;
-  images?: string[];
-}
-
-const mockProduct: Product = {
-  id: '550e8400-e29b-41d4-a716-446655440001',
-  name: 'iPhone 15 Pro Max 256GB Titânio Natural',
-  price: 8999.99,
-  originalPrice: 9999.99,
-  images: [
-    'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=800',
-    'https://images.pexels.com/photos/1194713/pexels-photo-1194713.jpeg?auto=compress&cs=tinysrgb&w=800',
-    'https://images.pexels.com/photos/3394650/pexels-photo-3394650.jpeg?auto=compress&cs=tinysrgb&w=800',
-  ],
-  discount: 10,
-  rating: 4.8,
-  reviews: 1247,
-  store: 'Apple Store Oficial',
-  description: 'O iPhone 15 Pro Max é o smartphone mais avançado da Apple, com chip A17 Pro, sistema de câmeras profissional e design em titânio premium. Experimente a tecnologia mais inovadora em suas mãos.',
-  specifications: {
-    'Tela': '6.7" Super Retina XDR OLED',
-    'Processador': 'Apple A17 Pro',
-    'Armazenamento': '256GB',
-    'Câmera': 'Tripla 48MP + 12MP + 12MP',
-    'Bateria': 'Até 29h de reprodução de vídeo',
-    'Sistema': 'iOS 17',
-  },
-  availability: 'in_stock',
-  freeShipping: true,
-  installments: 'em 12x R$ 749,99 sem juros',
-};
-
-const mockReviews: Review[] = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440101',
-    userName: 'João Silva',
-    rating: 5,
-    comment: 'Produto excelente! Superou minhas expectativas. A qualidade é incrível e chegou muito rápido.',
-    date: '15/01/2024',
-    helpful: 23,
-    images: ['https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=200'],
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440102',
-    userName: 'Maria Santos',
-    rating: 4,
-    comment: 'Muito bom produto, recomendo! Apenas o preço que está um pouco alto.',
-    date: '12/01/2024',
-    helpful: 15,
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440103',
-    userName: 'Pedro Costa',
-    rating: 5,
-    comment: 'Perfeito! Exatamente como descrito. Entrega rápida e produto bem embalado.',
-    date: '10/01/2024',
-    helpful: 31,
-  },
-];
-
 const ratingDistribution = [
   { stars: 5, count: 856, percentage: 68.7 },
   { stars: 4, count: 249, percentage: 20.0 },
@@ -115,30 +32,100 @@ export default function ProductScreen() {
   const { id } = useLocalSearchParams();
   const { addToCart } = useCart();
   const { colors } = useTheme();
-  const [product] = useState(mockProduct);
-  const [reviews] = useState(mockReviews);
+  const [product, setProduct] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [likedReviews, setLikedReviews] = useState<string[]>([]);
   const { addToFavorites, removeFromFavorites, isFavorite: isProductFavorite, loading: favoritesLoading } = useFavorites();
+  useEffect(() => {
+    if (id) {
+      fetchProduct();
+      fetchReviews();
+    }
+  }, [id]);
+
+  const fetchProduct = async () => {
+    setLoading(true);
+    
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        id,
+        name,
+        price,
+        original_price,
+        images,
+        rating,
+        reviews_count,
+        description,
+        specifications,
+        stock_quantity,
+        free_shipping,
+        installments,
+        stores ( name )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Erro ao buscar produto:', error);
+      setProduct(null);
+    } else {
+      setProduct(data);
+    }
+    
+    setLoading(false);
+  };
+
+  const fetchReviews = async () => {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select(`
+        id,
+        rating,
+        comment,
+        helpful_count,
+        images,
+        created_at,
+        user_profiles ( full_name )
+      `)
+      .eq('product_id', id)
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error('Erro ao buscar reviews:', error);
+      setReviews([]);
+    } else {
+      setReviews(data || []);
+    }
+  };
+
 
   const toggleFavorite = async () => {
-    if (favoritesLoading) return;
+    if (favoritesLoading || !product) return;
 
     if (isProductFavorite(product.id)) {
       await removeFromFavorites(product.id);
     } else {
+      const productPrice = Number(product.price);
+      const originalPrice = product.original_price ? Number(product.original_price) : undefined;
+      const productImage = product.images && product.images.length > 0 ? product.images[0] : '';
+      
       const favoriteItem = {
         id: product.id,
         name: product.name,
-        price: product.price,
-        originalPrice: product.originalPrice,
-        image: product.images[0],
-        discount: product.discount,
+        price: productPrice,
+        originalPrice: originalPrice,
+        image: productImage,
+        discount: originalPrice ? Math.round((1 - productPrice / originalPrice) * 100) : undefined,
         rating: product.rating,
-        reviews: product.reviews,
-        store: product.store,
-        freeShipping: product.freeShipping,
+        reviews: product.reviews_count || 0,
+        store: product.stores?.name || 'Loja',
+        freeShipping: product.free_shipping,
         installments: product.installments,
       };
       await addToFavorites(favoriteItem);
@@ -146,13 +133,17 @@ export default function ProductScreen() {
   };
 
   const handleAddToCart = () => {
+    if (!product) return;
+    
+    const productImage = product.images && product.images.length > 0 ? product.images[0] : '';
+    
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
-      image: product.images[0],
+      price: Number(product.price),
+      image: productImage,
       quantity,
-      store: product.store
+      store: product.stores?.name || 'Loja'
     });
   };
 
@@ -167,12 +158,10 @@ export default function ProductScreen() {
   };
 
   const handleWriteReview = () => {
-    // Navegar para tela de escrever avaliação
     router.push(`/product/${product.id}/write-review`);
   };
 
   const handleViewAllReviews = () => {
-    // Navegar para tela de todas as avaliações
     router.push(`/product/${product.id}/reviews`);
   };
 
@@ -182,16 +171,22 @@ export default function ProductScreen() {
     </TouchableOpacity>
   );
 
-  const renderReview = ({ item }: { item: Review }) => (
+  const renderReview = ({ item }: { item: any }) => (
     <View style={[styles.reviewCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.reviewHeader}>
         <View style={styles.reviewUser}>
           <View style={[styles.userAvatar, { backgroundColor: colors.primary }]}>
-            <Text style={styles.userInitial}>{item.userName.charAt(0)}</Text>
+            <Text style={styles.userInitial}>
+              {item.user_profiles?.full_name?.charAt(0) || 'U'}
+            </Text>
           </View>
           <View>
-            <Text style={[styles.userName, { color: colors.text }]}>{item.userName}</Text>
-            <Text style={[styles.reviewDate, { color: colors.textSecondary }]}>{item.date}</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>
+              {item.user_profiles?.full_name || 'Usuário'}
+            </Text>
+            <Text style={[styles.reviewDate, { color: colors.textSecondary }]}>
+              {new Date(item.created_at).toLocaleDateString('pt-BR')}
+            </Text>
           </View>
         </View>
         <View style={styles.reviewRating}>
@@ -256,18 +251,49 @@ export default function ProductScreen() {
   );
 
   const getAvailabilityInfo = () => {
-    switch (product.availability) {
-      case 'in_stock':
-        return { text: 'Em estoque', color: '#10B981' };
-      case 'low_stock':
-        return { text: 'Últimas unidades', color: '#F59E0B' };
-      case 'out_of_stock':
-        return { text: 'Fora de estoque', color: '#EF4444' };
-      default:
-        return { text: 'Em estoque', color: '#10B981' };
+    if (!product) return { text: 'Carregando...', color: '#6B7280' };
+    
+    const stockQuantity = product.stock_quantity || 0;
+    
+    if (stockQuantity > 10) {
+      return { text: 'Em estoque', color: '#10B981' };
+    } else if (stockQuantity > 0) {
+      return { text: 'Últimas unidades', color: '#F59E0B' };
+    } else {
+      return { text: 'Fora de estoque', color: '#EF4444' };
     }
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Carregando produto...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!product) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.errorContainer}>
+          <Text style={[styles.errorText, { color: colors.textSecondary }]}>Produto não encontrado</Text>
+          <TouchableOpacity
+            style={[styles.backButton, { backgroundColor: colors.primary }]}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backButtonText}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const productImages = product.images || [];
+  const productPrice = Number(product.price);
+  const originalPrice = product.original_price ? Number(product.original_price) : undefined;
+  const discount = originalPrice ? Math.round((1 - productPrice / originalPrice) * 100) : undefined;
   const availabilityInfo = getAvailabilityInfo();
 
   return (
@@ -296,36 +322,38 @@ export default function ProductScreen() {
         {/* Image Gallery */}
         <View style={styles.imageSection}>
           <Image 
-            source={{ uri: product.images[selectedImageIndex] }} 
+            source={{ uri: productImages[selectedImageIndex] || productImages[0] || '' }} 
             style={styles.mainImage} 
           />
-          {product.discount && (
+          {discount && (
             <View style={styles.discountBadge}>
-              <Text style={styles.discountText}>{product.discount}% OFF</Text>
+              <Text style={styles.discountText}>{discount}% OFF</Text>
             </View>
           )}
           
-          <FlatList
-            data={product.images}
-            renderItem={renderImage}
-            keyExtractor={(_, index) => index.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.imageGallery}
-          />
+          {productImages.length > 1 && (
+            <FlatList
+              data={productImages}
+              renderItem={renderImage}
+              keyExtractor={(_, index) => index.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.imageGallery}
+            />
+          )}
         </View>
 
         {/* Product Info */}
         <View style={[styles.productInfo, { backgroundColor: colors.surface }]}>
           <Text style={[styles.productName, { color: colors.text }]}>{product.name}</Text>
-          <Text style={[styles.storeName, { color: colors.textSecondary }]}>{product.store}</Text>
+          <Text style={[styles.storeName, { color: colors.textSecondary }]}>{product.stores?.name || 'Loja'}</Text>
           
           <View style={styles.ratingSection}>
             <View style={styles.ratingContainer}>
               <Star size={16} color="#FFD700" fill="#FFD700" />
-              <Text style={[styles.rating, { color: colors.text }]}>{product.rating}</Text>
+              <Text style={[styles.rating, { color: colors.text }]}>{product.rating || 0}</Text>
               <Text style={[styles.reviewCount, { color: colors.textSecondary }]}>
-                ({product.reviews} avaliações)
+                ({product.reviews_count || 0} avaliações)
               </Text>
             </View>
             
@@ -337,18 +365,18 @@ export default function ProductScreen() {
           </View>
 
           <View style={styles.priceSection}>
-            {product.originalPrice && (
+            {originalPrice && (
               <Text style={[styles.originalPrice, { color: colors.textSecondary }]}>
-                R$ {product.originalPrice.toFixed(2)}
+                R$ {originalPrice.toFixed(2)}
               </Text>
             )}
-            <Text style={styles.price}>R$ {product.price.toFixed(2)}</Text>
+            <Text style={styles.price}>R$ {productPrice.toFixed(2)}</Text>
             {product.installments && (
               <Text style={[styles.installments, { color: colors.textSecondary }]}>
                 {product.installments}
               </Text>
             )}
-            {product.freeShipping && (
+            {product.free_shipping && (
               <Text style={styles.freeShipping}>Frete grátis</Text>
             )}
           </View>
@@ -388,26 +416,28 @@ export default function ProductScreen() {
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Descrição</Text>
           <Text style={[styles.description, { color: colors.textSecondary }]}>
-            {product.description}
+            {product.description || 'Descrição não disponível'}
           </Text>
         </View>
 
         {/* Specifications */}
-        <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Especificações</Text>
-          {Object.entries(product.specifications).map(([key, value]) => (
-            <View key={key} style={[styles.specRow, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.specKey, { color: colors.textSecondary }]}>{key}</Text>
-              <Text style={[styles.specValue, { color: colors.text }]}>{value}</Text>
-            </View>
-          ))}
-        </View>
+        {product.specifications && Object.keys(product.specifications).length > 0 && (
+          <View style={[styles.section, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Especificações</Text>
+            {Object.entries(product.specifications).map(([key, value]) => (
+              <View key={key} style={[styles.specRow, { borderBottomColor: colors.border }]}>
+                <Text style={[styles.specKey, { color: colors.textSecondary }]}>{key}</Text>
+                <Text style={[styles.specValue, { color: colors.text }]}>{value}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Reviews Section */}
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
           <View style={styles.reviewsHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Avaliações ({product.reviews})
+              Avaliações ({product.reviews_count || 0})
             </Text>
             <TouchableOpacity onPress={handleViewAllReviews}>
               <Text style={[styles.seeAllText, { color: colors.primary }]}>Ver todas</Text>
@@ -417,19 +447,19 @@ export default function ProductScreen() {
           {/* Rating Summary */}
           <View style={styles.ratingSummary}>
             <View style={styles.ratingOverview}>
-              <Text style={[styles.ratingNumber, { color: colors.text }]}>{product.rating}</Text>
+              <Text style={[styles.ratingNumber, { color: colors.text }]}>{product.rating || 0}</Text>
               <View style={styles.ratingStars}>
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
                     size={16}
-                    color={i < Math.floor(product.rating) ? '#FFD700' : '#E5E7EB'}
-                    fill={i < Math.floor(product.rating) ? '#FFD700' : 'transparent'}
+                    color={i < Math.floor(product.rating || 0) ? '#FFD700' : '#E5E7EB'}
+                    fill={i < Math.floor(product.rating || 0) ? '#FFD700' : 'transparent'}
                   />
                 ))}
               </View>
               <Text style={[styles.ratingTotal, { color: colors.textSecondary }]}>
-                {product.reviews} avaliações
+                {product.reviews_count || 0} avaliações
               </Text>
             </View>
             
@@ -457,7 +487,20 @@ export default function ProductScreen() {
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
+
+const getAvailabilityInfo = () => {
+    switch (product.availability) {
+      case 'in_stock':
+        return { text: 'Em estoque', color: '#10B981' };
+      case 'low_stock':
+        return { text: 'Últimas unidades', color: '#F59E0B' };
+      case 'out_of_stock':
+        return { text: 'Fora de estoque', color: '#EF4444' };
+      default:
+        return { text: 'Em estoque', color: '#10B981' };
+    }
+  };
 
 const styles = StyleSheet.create({
   container: {
@@ -803,6 +846,35 @@ const styles = StyleSheet.create({
   writeReviewText: {
     color: '#FFFFFF',
     fontSize: 14,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  errorText: {
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  backButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: '600',
   },
 });

@@ -24,30 +24,6 @@ import { supabase } from '@/lib/supabase';
 
 const { width } = Dimensions.get('window');
 
-interface Store {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  rating: number;
-  category: string;
-  deliveryTime: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  discount?: number;
-  rating: number;
-  reviews: number;
-  store: string;
-  freeShipping: boolean;
-  installments?: string;
-}
-
 interface Category {
   id: string;
   name: string;
@@ -75,9 +51,9 @@ export default function HomeScreen() {
   const { user, profile } = useAuth();
   
   // Estados para dados do Supabase
-  const [stores, setStores] = useState<Store[]>([]);
+  const [stores, setStores] = useState<any[]>([]);
   const [loadingStores, setLoadingStores] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   
   // Estados da UI
@@ -88,7 +64,7 @@ export default function HomeScreen() {
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
   const scrollX = new Animated.Value(0);
 
-  // Buscar lojas reais do Supabase ao montar o componente
+  // Buscar lojas do Supabase
   useEffect(() => {
     const fetchStores = async () => {
       setLoadingStores(true);
@@ -112,25 +88,14 @@ export default function HomeScreen() {
         return;
       }
 
-      // Mapear os dados do Supabase para o tipo Store do front
-      const mapped = (data || []).map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        image: item.image_url,
-        rating: item.rating || 0,
-        category: item.category,
-        deliveryTime: item.delivery_time
-      }));
-
-      setStores(mapped);
+      setStores(data || []);
       setLoadingStores(false);
     };
 
     fetchStores();
   }, []);
 
-  // Buscar produtos reais do Supabase ao montar o componente
+  // Buscar produtos do Supabase
   useEffect(() => {
     const fetchProducts = async () => {
       setLoadingProducts(true);
@@ -156,22 +121,8 @@ export default function HomeScreen() {
         setLoadingProducts(false);
         return;
       }
-      // Mapear os dados do Supabase para o tipo Product do front
-      const mapped = (data || []).map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        price: Number(item.price),
-        originalPrice: item.original_price ? Number(item.original_price) : undefined,
-        image: item.images && item.images.length > 0 ? item.images[0] : '',
-        discount: item.original_price ? Math.round((1 - item.price / item.original_price) * 100) : undefined,
-        rating: item.rating || 0,
-        reviews: item.reviews_count || 0,
-        store: item.stores?.name || 'Loja',
-        freeShipping: item.free_shipping || false,
-        installments: item.installments,
-        category: item.category,
-      }));
-      setProducts(mapped);
+      
+      setProducts(data || []);
       setLoadingProducts(false);
     };
     fetchProducts();
@@ -207,7 +158,6 @@ export default function HomeScreen() {
 
   const cartItemCount = getCartItemCount();
 
-  // Atualizar toggleFavorite para usar products
   const toggleFavorite = async (productId: string) => {
     const product = products.find(p => p.id === productId);
     if (!product) return;
@@ -220,28 +170,28 @@ export default function HomeScreen() {
       const favoriteItem = {
         id: product.id,
         name: product.name,
-        price: product.price,
-        originalPrice: product.originalPrice,
-        image: product.image,
-        discount: product.discount,
+        price: Number(product.price),
+        originalPrice: product.original_price ? Number(product.original_price) : undefined,
+        image: product.images && product.images.length > 0 ? product.images[0] : '',
+        discount: product.original_price ? Math.round((1 - product.price / product.original_price) * 100) : undefined,
         rating: product.rating,
-        reviews: product.reviews,
-        store: product.store,
-        freeShipping: product.freeShipping,
+        reviews: product.reviews_count || 0,
+        store: product.stores?.name || 'Loja',
+        freeShipping: product.free_shipping || false,
         installments: product.installments,
       };
       await addToFavorites(favoriteItem);
     }
   };
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: any) => {
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
-      image: product.image,
+      price: Number(product.price),
+      image: product.images && product.images.length > 0 ? product.images[0] : '',
       quantity: 1,
-      store: product.store
+      store: product.stores?.name || 'Loja'
     });
   };
 
@@ -254,7 +204,7 @@ export default function HomeScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  const renderPromotion = ({ item, index }: { item: any; index: number }) => (
+  const renderPromotion = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={styles.promotionCard}
       onPress={() => router.push('/promotions')}
@@ -289,13 +239,20 @@ export default function HomeScreen() {
     />
   );
 
-  const renderProduct = ({ item }: { item: Product }) => (
+  const renderProduct = ({ item }: { item: any }) => {
+    const productImage = item.images && item.images.length > 0 ? item.images[0] : '';
+    const productPrice = Number(item.price);
+    const originalPrice = item.original_price ? Number(item.original_price) : undefined;
+    const discount = originalPrice ? Math.round((1 - productPrice / originalPrice) * 100) : undefined;
+    const storeName = item.stores?.name || 'Loja';
+    
+    return (
     <TouchableOpacity
       style={styles.productCard}
       onPress={() => router.push(`/product/${item.id}`)}
     >
       <View style={styles.productImageContainer}>
-        <Image source={{ uri: item.image }} style={styles.productImage} />
+        <Image source={{ uri: productImage }} style={styles.productImage} />
         <TouchableOpacity 
           style={styles.favoriteButton}
           onPress={() => toggleFavorite(item.id)}
@@ -306,35 +263,35 @@ export default function HomeScreen() {
             fill={isFavorite(item.id) ? '#FF6B6B' : 'transparent'}
           />
         </TouchableOpacity>
-        {item.discount && (
+        {discount && (
           <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>{item.discount}% OFF</Text>
+            <Text style={styles.discountText}>{discount}% OFF</Text>
           </View>
         )}
       </View>
       
       <View style={styles.productInfo}>
-        <Text style={styles.storeName}>{item.store}</Text>
+        <Text style={styles.storeName}>{storeName}</Text>
         <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
         
         <View style={styles.ratingContainer}>
           <Star size={14} color="#FFD700" fill="#FFD700" />
-          <Text style={styles.rating}>{item.rating}</Text>
-          <Text style={styles.reviews}>({item.reviews})</Text>
+          <Text style={styles.rating}>{item.rating || 0}</Text>
+          <Text style={styles.reviews}>({item.reviews_count || 0})</Text>
         </View>
         
         <View style={styles.priceContainer}>
-          {item.originalPrice && (
-            <Text style={styles.originalPrice}>R$ {item.originalPrice.toFixed(2)}</Text>
+          {originalPrice && (
+            <Text style={styles.originalPrice}>R$ {originalPrice.toFixed(2)}</Text>
           )}
-          <Text style={styles.price}>R$ {item.price.toFixed(2)}</Text>
+          <Text style={styles.price}>R$ {productPrice.toFixed(2)}</Text>
         </View>
         
         {item.installments && (
           <Text style={styles.installments}>{item.installments}</Text>
         )}
         
-        {item.freeShipping && (
+        {item.free_shipping && (
           <View style={styles.shippingContainer}>
             <Text style={styles.freeShipping}>Frete grátis</Text>
           </View>
@@ -349,14 +306,15 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
-  );
+    );
+  };
 
-  const renderStore = ({ item }: { item: Store }) => (
+  const renderStore = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={styles.storeCard}
       onPress={() => router.push(`/store/${item.id}`)}
     >
-      <Image source={{ uri: item.image }} style={styles.storeImage} />
+      <Image source={{ uri: item.image_url }} style={styles.storeImage} />
       <View style={styles.storeOverlay}>
         <View style={styles.storeInfo}>
           <Text style={styles.storeName}>{item.name}</Text>
@@ -366,7 +324,7 @@ export default function HomeScreen() {
               <Star size={12} color="#FFD700" fill="#FFD700" />
               <Text style={styles.storeRatingText}>{item.rating}</Text>
             </View>
-            <Text style={styles.storeDeliveryTime}>{item.deliveryTime}</Text>
+            <Text style={styles.storeDeliveryTime}>{item.delivery_time}</Text>
           </View>
         </View>
       </View>
@@ -549,7 +507,7 @@ export default function HomeScreen() {
           </View>
           
           <FlatList
-            data={products}
+            data={products.slice(0, 6)}
             renderItem={renderProduct}
             keyExtractor={(item) => item.id}
             numColumns={2}
@@ -566,7 +524,7 @@ export default function HomeScreen() {
           </View>
           
           <FlatList
-            data={products.slice(0, 4)}
+            data={products.slice(6, 10)}
             renderItem={renderProduct}
             keyExtractor={(item) => item.id}
             numColumns={2}
@@ -582,7 +540,7 @@ export default function HomeScreen() {
           </View>
           
           <FlatList
-            data={products.slice(2, 6)}
+            data={products.slice(10, 14)}
             renderItem={renderProduct}
             keyExtractor={(item) => item.id}
             numColumns={2}

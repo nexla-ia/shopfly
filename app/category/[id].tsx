@@ -16,21 +16,6 @@ import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  discount?: number;
-  rating: number;
-  reviews: number;
-  store: string;
-  freeShipping: boolean;
-  installments?: string;
-  sales: number;
-}
-
 const categoryNames: { [key: string]: string } = {
   'supermarket': 'Supermercado',
   'home': 'Casa',
@@ -39,217 +24,6 @@ const categoryNames: { [key: string]: string } = {
   'electronics': 'Eletrônicos',
   'sports': 'Esportes',
 };
-
-const mockProducts: Product[] = [
-  // Eletrônicos
-  {
-    id: '550e8400-e29b-41d4-a716-446655440001',
-    name: 'iPhone 15 Pro Max 256GB',
-    price: 8999.99,
-    originalPrice: 9999.99,
-    discount: 10,
-    image: 'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.8,
-    reviews: 1247,
-    store: 'Apple Store Oficial',
-    freeShipping: true,
-    installments: 'em 12x R$ 749,99',
-    sales: 2500
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440002',
-    name: 'MacBook Air M2 13" 256GB',
-    price: 7299.99,
-    originalPrice: 7999.99,
-    discount: 9,
-    image: 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.9,
-    reviews: 892,
-    store: 'Apple Store Oficial',
-    freeShipping: true,
-    installments: 'em 12x R$ 608,33',
-    sales: 1800
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440003',
-    name: 'AirPods Pro 2ª Geração',
-    price: 1899.99,
-    originalPrice: 2199.99,
-    discount: 14,
-    image: 'https://images.pexels.com/photos/3394650/pexels-photo-3394650.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    reviews: 2156,
-    store: 'Apple Store Oficial',
-    freeShipping: true,
-    installments: 'em 10x R$ 189,99',
-    sales: 3200
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440004',
-    name: 'Samsung Galaxy S24 Ultra',
-    price: 6799.99,
-    originalPrice: 7499.99,
-    discount: 9,
-    image: 'https://images.pexels.com/photos/1194713/pexels-photo-1194713.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    reviews: 1834,
-    store: 'Samsung Oficial',
-    freeShipping: true,
-    installments: 'em 12x R$ 566,66',
-    sales: 1500
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440005',
-    name: 'Monitor Gamer ASUS 27" 144Hz',
-    price: 1299.99,
-    originalPrice: 1599.99,
-    discount: 19,
-    image: 'https://images.pexels.com/photos/777001/pexels-photo-777001.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.5,
-    reviews: 567,
-    store: 'ASUS Store',
-    freeShipping: true,
-    installments: 'em 12x R$ 108,33',
-    sales: 890
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440006',
-    name: 'Teclado Mecânico Logitech',
-    price: 599.99,
-    originalPrice: 699.99,
-    discount: 14,
-    image: 'https://images.pexels.com/photos/2115256/pexels-photo-2115256.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.4,
-    reviews: 892,
-    store: 'Logitech Store',
-    freeShipping: true,
-    installments: 'em 6x R$ 99,99',
-    sales: 650
-  },
-  // Supermercado
-  {
-    id: '550e8400-e29b-41d4-a716-446655440007',
-    name: 'Arroz Integral Tio João 1kg',
-    price: 8.99,
-    image: 'https://images.pexels.com/photos/33239/rice-grain-food-raw.jpg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.5,
-    reviews: 234,
-    store: 'Supermercado Central',
-    freeShipping: true,
-    sales: 1200
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440008',
-    name: 'Feijão Preto Camil 1kg',
-    price: 7.49,
-    image: 'https://images.pexels.com/photos/4198564/pexels-photo-4198564.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    reviews: 189,
-    store: 'Supermercado Central',
-    freeShipping: true,
-    sales: 980
-  },
-  // Casa
-  {
-    id: '550e8400-e29b-41d4-a716-446655440009',
-    name: 'Sofá 3 Lugares Cinza Moderno',
-    price: 1299.99,
-    originalPrice: 1599.99,
-    discount: 19,
-    image: 'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    reviews: 156,
-    store: 'Casa & Decoração',
-    freeShipping: true,
-    installments: 'em 12x R$ 108,33',
-    sales: 340
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440010',
-    name: 'Mesa de Jantar 6 Lugares Madeira',
-    price: 899.99,
-    originalPrice: 1199.99,
-    discount: 25,
-    image: 'https://images.pexels.com/photos/1080721/pexels-photo-1080721.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.4,
-    reviews: 98,
-    store: 'Casa & Decoração',
-    freeShipping: true,
-    installments: 'em 10x R$ 89,99',
-    sales: 210
-  },
-  // Moda
-  {
-    id: '550e8400-e29b-41d4-a716-446655440011',
-    name: 'Vestido Floral Verão Feminino',
-    price: 89.99,
-    originalPrice: 129.99,
-    discount: 31,
-    image: 'https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    reviews: 267,
-    store: 'Moda & Estilo',
-    freeShipping: true,
-    installments: 'em 3x R$ 29,99',
-    sales: 780
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440012',
-    name: 'Tênis Esportivo Masculino Preto',
-    price: 199.99,
-    originalPrice: 249.99,
-    discount: 20,
-    image: 'https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.5,
-    reviews: 445,
-    store: 'Moda & Estilo',
-    freeShipping: true,
-    installments: 'em 4x R$ 49,99',
-    sales: 1100
-  },
-  // Beleza
-  {
-    id: '550e8400-e29b-41d4-a716-446655440013',
-    name: 'Kit Skincare Facial Completo',
-    price: 149.99,
-    originalPrice: 199.99,
-    discount: 25,
-    image: 'https://images.pexels.com/photos/3685530/pexels-photo-3685530.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.8,
-    reviews: 523,
-    store: 'Beleza Natural',
-    freeShipping: true,
-    installments: 'em 5x R$ 29,99',
-    sales: 890
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440014',
-    name: 'Perfume Feminino Floral 100ml',
-    price: 89.99,
-    image: 'https://images.pexels.com/photos/965989/pexels-photo-965989.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    reviews: 312,
-    store: 'Beleza Natural',
-    freeShipping: true,
-    installments: 'em 3x R$ 29,99',
-    sales: 650
-  },
-  // Esportes
-  {
-    id: '550e8400-e29b-41d4-a716-446655440015',
-    name: 'Bicicleta Mountain Bike Aro 29',
-    price: 1599.99,
-    originalPrice: 1999.99,
-    discount: 20,
-    image: 'https://images.pexels.com/photos/100582/pexels-photo-100582.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    reviews: 178,
-    store: 'Esportes Total',
-    freeShipping: true,
-    installments: 'em 12x R$ 133,33',
-    sales: 290
-  }
-];
 
 type SortOption = 'relevance' | 'price_low' | 'price_high' | 'sales' | 'rating';
 
@@ -268,76 +42,123 @@ export default function CategoryScreen() {
   const { colors } = useTheme();
   const [products, setProducts] = useState(mockProducts);
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
+  const [loading, setLoading] = useState(false);
   const [showSortModal, setShowSortModal] = useState(false);
 
   const categoryName = categoryNames[id as string] || 'Categoria';
 
   useEffect(() => {
-    sortProducts(sortBy);
+    fetchProducts();
+  }, [id]);
+
+  useEffect(() => {
+    fetchProducts();
   }, [sortBy]);
 
-  const sortProducts = (option: SortOption) => {
-    const sorted = [...mockProducts].sort((a, b) => {
-      switch (option) {
+  const fetchProducts = async () => {
+    setLoading(true);
+    
+    let query = supabase
+      .from('products')
+      .select(`
+        id,
+        name,
+        price,
+        original_price,
+        images,
+        rating,
+        reviews_count,
+        free_shipping,
+        installments,
+        sales_count,
+        stores ( name )
+      `)
+      .eq('category', id)
+      .eq('is_active', true);
+
+    // Aplicar ordenação
+    switch (sortBy) {
         case 'price_low':
-          return a.price - b.price;
+          query = query.order('price', { ascending: true });
+          break;
         case 'price_high':
-          return b.price - a.price;
+          query = query.order('price', { ascending: false });
+          break;
         case 'sales':
-          return b.sales - a.sales;
+          query = query.order('sales_count', { ascending: false });
+          break;
         case 'rating':
-          return b.rating - a.rating;
+          query = query.order('rating', { ascending: false });
+          break;
         default:
-          return 0;
-      }
-    });
-    setProducts(sorted);
+          query = query.order('created_at', { ascending: false });
+    }
+
+    const { data, error } = await query.limit(50);
+
+    if (error) {
+      console.error('Erro ao buscar produtos:', error);
+      setProducts([]);
+    } else {
+      setProducts(data || []);
+    }
+    
+    setLoading(false);
   };
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: any) => {
+    const productImage = product.images && product.images.length > 0 ? product.images[0] : '';
+    
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
-      image: product.image,
+      price: Number(product.price),
+      image: productImage,
       quantity: 1,
-      store: product.store
+      store: product.stores?.name || 'Loja'
     });
   };
 
-  const renderProduct = ({ item }: { item: Product }) => (
+  const renderProduct = ({ item }: { item: any }) => {
+    const productImage = item.images && item.images.length > 0 ? item.images[0] : '';
+    const productPrice = Number(item.price);
+    const originalPrice = item.original_price ? Number(item.original_price) : undefined;
+    const discount = originalPrice ? Math.round((1 - productPrice / originalPrice) * 100) : undefined;
+    const storeName = item.stores?.name || 'Loja';
+    
+    return (
     <TouchableOpacity
       style={[styles.productCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
       onPress={() => router.push(`/product/${item.id}`)}
     >
       <View style={styles.productImageContainer}>
-        <Image source={{ uri: item.image }} style={styles.productImage} />
-        {item.discount && (
+        <Image source={{ uri: productImage }} style={styles.productImage} />
+        {discount && (
           <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>{item.discount}% OFF</Text>
+            <Text style={styles.discountText}>{discount}% OFF</Text>
           </View>
         )}
       </View>
       
       <View style={styles.productInfo}>
-        <Text style={[styles.storeName, { color: colors.textSecondary }]}>{item.store}</Text>
+        <Text style={[styles.storeName, { color: colors.textSecondary }]}>{storeName}</Text>
         <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>
           {item.name}
         </Text>
         
         <View style={styles.ratingContainer}>
           <Star size={12} color="#FFD700" fill="#FFD700" />
-          <Text style={[styles.rating, { color: colors.text }]}>{item.rating}</Text>
-          <Text style={[styles.reviews, { color: colors.textSecondary }]}>({item.reviews})</Text>
+          <Text style={[styles.rating, { color: colors.text }]}>{item.rating || 0}</Text>
+          <Text style={[styles.reviews, { color: colors.textSecondary }]}>({item.reviews_count || 0})</Text>
         </View>
         
         <View style={styles.priceContainer}>
-          {item.originalPrice && (
+          {originalPrice && (
             <Text style={[styles.originalPrice, { color: colors.textSecondary }]}>
-              R$ {item.originalPrice.toFixed(2)}
+              R$ {originalPrice.toFixed(2)}
             </Text>
           )}
-          <Text style={styles.price}>R$ {item.price.toFixed(2)}</Text>
+          <Text style={styles.price}>R$ {productPrice.toFixed(2)}</Text>
         </View>
         
         {item.installments && (
@@ -346,7 +167,7 @@ export default function CategoryScreen() {
           </Text>
         )}
         
-        {item.freeShipping && (
+        {item.free_shipping && (
           <View style={styles.shippingContainer}>
             <Text style={styles.freeShipping}>Frete grátis</Text>
           </View>
@@ -361,7 +182,8 @@ export default function CategoryScreen() {
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
-  );
+    );
+  };
 
   const renderSortOption = (option: any) => (
     <TouchableOpacity
@@ -409,7 +231,7 @@ export default function CategoryScreen() {
       {/* Results Info */}
       <View style={[styles.resultsContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <Text style={[styles.resultsText, { color: colors.textSecondary }]}>
-          {products.length} produtos encontrados
+          {loading ? 'Buscando...' : `${products.length} produtos encontrados`}
         </Text>
         <TouchableOpacity
           style={styles.sortButton}
@@ -430,6 +252,17 @@ export default function CategoryScreen() {
         numColumns={2}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.productsList}
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Carregando produtos...</Text>
+            </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Nenhum produto encontrado</Text>
+            </View>
+          )
+        }
       />
 
       {/* Sort Modal */}
@@ -651,6 +484,24 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     justifyContent: 'center',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+  },
     alignItems: 'center',
   },
 });

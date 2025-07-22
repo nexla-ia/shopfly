@@ -11,83 +11,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Clock, CircleCheck as CheckCircle, Package, Truck, Calendar, ArrowLeft } from 'lucide-react-native';
 
-interface Order {
-  id: string;
-  date: string;
-  status: 'pending' | 'preparing' | 'ready' | 'delivered';
-  items: Array<{
-    id: string;
-    name: string;
-    quantity: number;
-    price: number;
-    image: string;
-  }>;
-  total: number;
-  store: string;
-  deliveryTime: string;
-}
-
-const mockOrders: Order[] = [
-  {
-    id: '1',
-    date: '2024-01-15',
-    status: 'delivered',
-    items: [
-      {
-        id: '1',
-        name: 'Smartphone Samsung Galaxy A54',
-        quantity: 1,
-        price: 1299.99,
-        image: 'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=400'
-      }
-    ],
-    total: 1305.98,
-    store: 'Loja de Eletrônicos Tech',
-    deliveryTime: '30-45 min'
-  },
-  {
-    id: '2',
-    date: '2024-01-14',
-    status: 'preparing',
-    items: [
-      {
-        id: '3',
-        name: 'Arroz Integral Tio João 1kg',
-        quantity: 2,
-        price: 8.99,
-        image: 'https://images.pexels.com/photos/33239/rice-grain-food-raw.jpg?auto=compress&cs=tinysrgb&w=400'
-      },
-      {
-        id: '4',
-        name: 'Feijão Preto Camil 1kg',
-        quantity: 1,
-        price: 7.49,
-        image: 'https://images.pexels.com/photos/4198564/pexels-photo-4198564.jpeg?auto=compress&cs=tinysrgb&w=400'
-      }
-    ],
-    total: 31.46,
-    store: 'Supermercado Central',
-    deliveryTime: '20-30 min'
-  },
-  {
-    id: '3',
-    date: '2024-01-13',
-    status: 'ready',
-    items: [
-      {
-        id: '5',
-        name: 'Dipirona 500mg',
-        quantity: 1,
-        price: 12.99,
-        image: 'https://images.pexels.com/photos/3683080/pexels-photo-3683080.jpeg?auto=compress&cs=tinysrgb&w=400'
-      }
-    ],
-    total: 18.98,
-    store: 'Farmácia Saúde+',
-    deliveryTime: '15-25 min'
-  },
-];
-
 const statusConfig = {
   pending: {
     label: 'Pendente',
@@ -117,7 +40,46 @@ const statusConfig = {
 
 export default function OrdersScreen() {
   const router = useRouter();
-  const [orders] = useState(mockOrders);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        id,
+        status,
+        total_amount,
+        created_at,
+        estimated_delivery,
+        order_items (
+          id,
+          quantity,
+          unit_price,
+          products (
+            id,
+            name,
+            images
+          )
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao buscar pedidos:', error);
+      setOrders([]);
+    } else {
+      setOrders(data || []);
+    }
+    
+    setLoading(false);
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -128,8 +90,8 @@ export default function OrdersScreen() {
     });
   };
 
-  const renderOrderItem = ({ item }: { item: Order }) => {
-    const status = statusConfig[item.status];
+  const renderOrderItem = ({ item }: { item: any }) => {
+    const status = statusConfig[item.status as keyof typeof statusConfig];
     const StatusIcon = status.icon;
 
     return (
@@ -142,7 +104,7 @@ export default function OrdersScreen() {
             <Text style={styles.orderId}>Pedido #{item.id}</Text>
             <View style={styles.dateContainer}>
               <Calendar size={14} color="#6B7280" />
-              <Text style={styles.orderDate}>{formatDate(item.date)}</Text>
+              <Text style={styles.orderDate}>{formatDate(item.created_at)}</Text>
             </View>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: status.bgColor }]}>
@@ -153,33 +115,38 @@ export default function OrdersScreen() {
           </View>
         </View>
 
-        <Text style={styles.storeName}>{item.store}</Text>
-        <Text style={styles.deliveryTime}>Entrega em {item.deliveryTime}</Text>
+        <Text style={styles.storeName}>Pedido ShopFly</Text>
+        <Text style={styles.deliveryTime}>Entrega em {item.estimated_delivery || '30-60 min'}</Text>
 
         <View style={styles.itemsContainer}>
-          {item.items.slice(0, 2).map((product, index) => (
-            <View key={product.id} style={styles.orderItemRow}>
-              <Image source={{ uri: product.image }} style={styles.itemImage} />
+          {item.order_items?.slice(0, 2).map((orderItem: any, index: number) => (
+            <View key={orderItem.id} style={styles.orderItemRow}>
+              <Image 
+                source={{ 
+                  uri: orderItem.products?.images?.[0] || '' 
+                }} 
+                style={styles.itemImage} 
+              />
               <View style={styles.itemDetails}>
                 <Text style={styles.itemName} numberOfLines={1}>
-                  {product.name}
+                  {orderItem.products?.name || 'Produto'}
                 </Text>
                 <Text style={styles.itemQuantity}>
-                  {product.quantity}x R$ {product.price.toFixed(2)}
+                  {orderItem.quantity}x R$ {Number(orderItem.unit_price).toFixed(2)}
                 </Text>
               </View>
             </View>
           ))}
-          {item.items.length > 2 && (
+          {(item.order_items?.length || 0) > 2 && (
             <Text style={styles.moreItems}>
-              +{item.items.length - 2} outros itens
+              +{(item.order_items?.length || 0) - 2} outros itens
             </Text>
           )}
         </View>
 
         <View style={styles.orderFooter}>
           <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>R$ {item.total.toFixed(2)}</Text>
+          <Text style={styles.totalValue}>R$ {Number(item.total_amount).toFixed(2)}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -194,7 +161,7 @@ export default function OrdersScreen() {
       </Text>
       <TouchableOpacity
         style={styles.shopButton}
-        onPress={() => router.push('/search')}
+        onPress={() => router.push('/(tabs)/search')}
       >
         <Text style={styles.shopButtonText}>Começar a comprar</Text>
       </TouchableOpacity>
@@ -211,7 +178,11 @@ export default function OrdersScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      {orders.length === 0 ? (
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Carregando pedidos...</Text>
+        </View>
+      ) : orders.length === 0 ? (
         renderEmptyOrders()
       ) : (
         <FlatList
@@ -356,6 +327,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#059669',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6B7280',
   },
   emptyOrders: {
     flex: 1,

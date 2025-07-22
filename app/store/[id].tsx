@@ -17,130 +17,99 @@ import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
-interface Store {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  coverImage: string;
-  rating: number;
-  reviews: number;
-  category: string;
-  deliveryTime: string;
-  address: string;
-  phone: string;
-  hours: string;
-  isOpen: boolean;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  discount?: number;
-  rating: number;
-  reviews: number;
-  freeShipping: boolean;
-}
-
-const mockStore: Store = {
-  id: '1',
-  name: 'TechStore Oficial',
-  description: 'Sua loja de eletrônicos de confiança com os melhores produtos e atendimento especializado',
-  image: 'https://images.pexels.com/photos/1036936/pexels-photo-1036936.jpeg?auto=compress&cs=tinysrgb&w=400',
-  coverImage: 'https://images.pexels.com/photos/1229861/pexels-photo-1229861.jpeg?auto=compress&cs=tinysrgb&w=800',
-  rating: 4.8,
-  reviews: 2847,
-  category: 'Eletrônicos',
-  deliveryTime: '30-45 min',
-  address: 'Rua das Tecnologias, 123 - Centro, São Paulo - SP',
-  phone: '(11) 99999-9999',
-  hours: 'Seg-Sex: 8h-18h | Sáb: 8h-14h',
-  isOpen: true,
-};
-
-const mockProducts: Product[] = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440001',
-    name: 'iPhone 15 Pro Max 256GB',
-    price: 8999.99,
-    originalPrice: 9999.99,
-    discount: 10,
-    image: 'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.8,
-    reviews: 1247,
-    freeShipping: true,
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440002',
-    name: 'MacBook Air M2 13"',
-    price: 7299.99,
-    originalPrice: 7999.99,
-    discount: 9,
-    image: 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.9,
-    reviews: 892,
-    freeShipping: true,
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440003',
-    name: 'AirPods Pro 2ª Geração',
-    price: 1899.99,
-    originalPrice: 2199.99,
-    discount: 14,
-    image: 'https://images.pexels.com/photos/3394650/pexels-photo-3394650.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    reviews: 2156,
-    freeShipping: true,
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440005',
-    name: 'Monitor Gamer ASUS 27"',
-    price: 1299.99,
-    originalPrice: 1599.99,
-    discount: 19,
-    image: 'https://images.pexels.com/photos/777001/pexels-photo-777001.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.5,
-    reviews: 567,
-    freeShipping: true,
-  },
-];
-
 export default function StoreScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { addToCart } = useCart();
   const { colors } = useTheme();
-  const [store] = useState(mockStore);
-  const [products] = useState(mockProducts);
+  const [store, setStore] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleAddToCart = (product: Product) => {
+  useEffect(() => {
+    if (id) {
+      fetchStore();
+      fetchStoreProducts();
+    }
+  }, [id]);
+
+  const fetchStore = async () => {
+    setLoading(true);
+    
+    const { data, error } = await supabase
+      .from('stores')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Erro ao buscar loja:', error);
+      setStore(null);
+    } else {
+      setStore(data);
+    }
+    
+    setLoading(false);
+  };
+
+  const fetchStoreProducts = async () => {
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        id,
+        name,
+        price,
+        original_price,
+        images,
+        rating,
+        reviews_count,
+        free_shipping
+      `)
+      .eq('store_id', id)
+      .eq('is_active', true)
+      .limit(20);
+
+    if (error) {
+      console.error('Erro ao buscar produtos da loja:', error);
+      setProducts([]);
+    } else {
+      setProducts(data || []);
+    }
+  };
+
+  const handleAddToCart = (product: any) => {
+    const productImage = product.images && product.images.length > 0 ? product.images[0] : '';
+    
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
-      image: product.image,
+      price: Number(product.price),
+      image: productImage,
       quantity: 1,
-      store: store.name
+      store: store?.name || 'Loja'
     });
   };
 
   const handleChat = () => {
-    router.push(`/chat/${store.id}`);
+    router.push(`/chat/${store?.id}`);
   };
 
-  const renderProduct = ({ item }: { item: Product }) => (
+  const renderProduct = ({ item }: { item: any }) => {
+    const productImage = item.images && item.images.length > 0 ? item.images[0] : '';
+    const productPrice = Number(item.price);
+    const originalPrice = item.original_price ? Number(item.original_price) : undefined;
+    const discount = originalPrice ? Math.round((1 - productPrice / originalPrice) * 100) : undefined;
+    
+    return (
     <TouchableOpacity
       style={[styles.productCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
       onPress={() => router.push(`/product/${item.id}`)}
     >
       <View style={styles.productImageContainer}>
-        <Image source={{ uri: item.image }} style={styles.productImage} />
-        {item.discount && (
+        <Image source={{ uri: productImage }} style={styles.productImage} />
+        {discount && (
           <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>{item.discount}% OFF</Text>
+            <Text style={styles.discountText}>{discount}% OFF</Text>
           </View>
         )}
       </View>
@@ -152,20 +121,20 @@ export default function StoreScreen() {
         
         <View style={styles.ratingContainer}>
           <Star size={12} color="#FFD700" fill="#FFD700" />
-          <Text style={[styles.rating, { color: colors.text }]}>{item.rating}</Text>
-          <Text style={[styles.reviews, { color: colors.textSecondary }]}>({item.reviews})</Text>
+          <Text style={[styles.rating, { color: colors.text }]}>{item.rating || 0}</Text>
+          <Text style={[styles.reviews, { color: colors.textSecondary }]}>({item.reviews_count || 0})</Text>
         </View>
         
         <View style={styles.priceContainer}>
-          {item.originalPrice && (
+          {originalPrice && (
             <Text style={[styles.originalPrice, { color: colors.textSecondary }]}>
-              R$ {item.originalPrice.toFixed(2)}
+              R$ {originalPrice.toFixed(2)}
             </Text>
           )}
-          <Text style={styles.price}>R$ {item.price.toFixed(2)}</Text>
+          <Text style={styles.price}>R$ {productPrice.toFixed(2)}</Text>
         </View>
         
-        {item.freeShipping && (
+        {item.free_shipping && (
           <Text style={styles.freeShipping}>Frete grátis</Text>
         )}
         
@@ -178,7 +147,34 @@ export default function StoreScreen() {
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
-  );
+    );
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Carregando loja...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!store) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.errorContainer}>
+          <Text style={[styles.errorText, { color: colors.textSecondary }]}>Loja não encontrada</Text>
+          <TouchableOpacity
+            style={[styles.backButton, { backgroundColor: colors.primary }]}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backButtonText}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -187,7 +183,7 @@ export default function StoreScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <ArrowLeft size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{store.name}</Text>
+        <Text style={styles.headerTitle}>{store?.name || 'Loja'}</Text>
         <TouchableOpacity onPress={handleChat}>
           <MessageCircle size={24} color="#FFFFFF" />
         </TouchableOpacity>
@@ -196,10 +192,10 @@ export default function StoreScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Store Cover */}
         <View style={styles.coverContainer}>
-          <Image source={{ uri: store.coverImage }} style={styles.coverImage} />
+          <Image source={{ uri: store.cover_image_url || store.image_url }} style={styles.coverImage} />
           <View style={styles.coverOverlay}>
             <View style={styles.storeLogoContainer}>
-              <Image source={{ uri: store.image }} style={styles.storeLogo} />
+              <Image source={{ uri: store.image_url }} style={styles.storeLogo} />
             </View>
           </View>
         </View>
@@ -211,25 +207,25 @@ export default function StoreScreen() {
               <Text style={[styles.storeName, { color: colors.text }]}>{store.name}</Text>
               <View style={[
                 styles.statusBadge,
-                { backgroundColor: store.isOpen ? '#10B981' : '#EF4444' }
+                { backgroundColor: store.is_open ? '#10B981' : '#EF4444' }
               ]}>
                 <Text style={styles.statusText}>
-                  {store.isOpen ? 'Aberto' : 'Fechado'}
+                  {store.is_open ? 'Aberto' : 'Fechado'}
                 </Text>
               </View>
             </View>
             
             <View style={styles.ratingContainer}>
               <Star size={16} color="#FFD700" fill="#FFD700" />
-              <Text style={[styles.storeRating, { color: colors.text }]}>{store.rating}</Text>
+              <Text style={[styles.storeRating, { color: colors.text }]}>{store.rating || 0}</Text>
               <Text style={[styles.storeReviews, { color: colors.textSecondary }]}>
-                ({store.reviews} avaliações)
+                ({store.reviews_count || 0} avaliações)
               </Text>
             </View>
           </View>
 
           <Text style={[styles.storeDescription, { color: colors.textSecondary }]}>
-            {store.description}
+            {store.description || 'Loja parceira'}
           </Text>
 
           {/* Store Details */}
@@ -237,21 +233,21 @@ export default function StoreScreen() {
             <View style={styles.detailRow}>
               <MapPin size={16} color={colors.textSecondary} />
               <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-                {store.address}
+                {store.address || 'Endereço não informado'}
               </Text>
             </View>
             
             <View style={styles.detailRow}>
               <Phone size={16} color={colors.textSecondary} />
               <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-                {store.phone}
+                {store.phone || 'Telefone não informado'}
               </Text>
             </View>
             
             <View style={styles.detailRow}>
               <Clock size={16} color={colors.textSecondary} />
               <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-                {store.hours}
+                {store.hours || 'Horário não informado'}
               </Text>
             </View>
           </View>
@@ -277,7 +273,7 @@ export default function StoreScreen() {
       {/* Chat Button */}
       <TouchableOpacity
         style={[styles.viewProductsButton, { backgroundColor: colors.primary }]}
-        onPress={() => router.push(`/(tabs)/search?store=${store.id}`)}
+        onPress={() => router.push(`/(tabs)/search?store=${store?.id}`)}
       >
         <Text style={styles.viewProductsButtonText}>Ver todos os produtos</Text>
       </TouchableOpacity>
@@ -498,5 +494,34 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  errorText: {
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  backButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

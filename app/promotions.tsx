@@ -16,172 +16,117 @@ import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
-interface PromotionProduct {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice: number;
-  image: string;
-  discount: number;
-  rating: number;
-  reviews: number;
-  store: string;
-  timeLeft: string;
-  limitedQuantity?: number;
-  freeShipping: boolean;
-}
-
-const promotionProducts: PromotionProduct[] = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440001',
-    name: 'iPhone 15 Pro Max 256GB Titânio Natural',
-    price: 7999.99,
-    originalPrice: 9999.99,
-    discount: 20,
-    image: 'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.8,
-    reviews: 1247,
-    store: 'Apple Store Oficial',
-    timeLeft: '2h 15m',
-    limitedQuantity: 5,
-    freeShipping: true,
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440002',
-    name: 'MacBook Air M2 13" 256GB Space Gray',
-    price: 6499.99,
-    originalPrice: 7999.99,
-    discount: 19,
-    image: 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.9,
-    reviews: 892,
-    store: 'Apple Store Oficial',
-    timeLeft: '1h 45m',
-    freeShipping: true,
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440004',
-    name: 'Samsung Galaxy S24 Ultra 512GB Preto',
-    price: 5799.99,
-    originalPrice: 7499.99,
-    discount: 23,
-    image: 'https://images.pexels.com/photos/1194713/pexels-photo-1194713.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    reviews: 1834,
-    store: 'Samsung Oficial',
-    timeLeft: '3h 30m',
-    limitedQuantity: 12,
-    freeShipping: true,
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440003',
-    name: 'AirPods Pro 2ª Geração com Case MagSafe',
-    price: 1599.99,
-    originalPrice: 2199.99,
-    discount: 27,
-    image: 'https://images.pexels.com/photos/3394650/pexels-photo-3394650.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    reviews: 2156,
-    store: 'Apple Store Oficial',
-    timeLeft: '4h 20m',
-    freeShipping: true,
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440005',
-    name: 'Monitor Gamer ASUS 27" 144Hz IPS',
-    price: 999.99,
-    originalPrice: 1599.99,
-    discount: 38,
-    image: 'https://images.pexels.com/photos/777001/pexels-photo-777001.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.5,
-    reviews: 567,
-    store: 'ASUS Store',
-    timeLeft: '5h 10m',
-    limitedQuantity: 8,
-    freeShipping: true,
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440019',
-    name: 'Notebook Dell Inspiron 15 i5 16GB SSD 512GB',
-    price: 2799.99,
-    originalPrice: 3999.99,
-    discount: 30,
-    image: 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.4,
-    reviews: 892,
-    store: 'Dell Oficial',
-    timeLeft: '6h 45m',
-    freeShipping: true,
-  },
-];
-
 export default function PromotionsScreen() {
   const router = useRouter();
   const { addToCart } = useCart();
   const { colors } = useTheme();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleAddToCart = (product: PromotionProduct) => {
+  useEffect(() => {
+    fetchPromotionProducts();
+  }, []);
+
+  const fetchPromotionProducts = async () => {
+    setLoading(true);
+    
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        id,
+        name,
+        price,
+        original_price,
+        images,
+        rating,
+        reviews_count,
+        free_shipping,
+        installments,
+        stores ( name )
+      `)
+      .not('original_price', 'is', null)
+      .eq('is_active', true)
+      .order('sales_count', { ascending: false })
+      .limit(20);
+
+    if (error) {
+      console.error('Erro ao buscar produtos em promoção:', error);
+      setProducts([]);
+    } else {
+      setProducts(data || []);
+    }
+    
+    setLoading(false);
+  };
+
+  const handleAddToCart = (product: any) => {
+    const productImage = product.images && product.images.length > 0 ? product.images[0] : '';
+    
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
-      image: product.image,
+      price: Number(product.price),
+      image: productImage,
       quantity: 1,
-      store: product.store
+      store: product.stores?.name || 'Loja'
     });
   };
 
-  const renderPromotionProduct = ({ item }: { item: PromotionProduct }) => (
+  const renderPromotionProduct = ({ item }: { item: any }) => {
+    const productImage = item.images && item.images.length > 0 ? item.images[0] : '';
+    const productPrice = Number(item.price);
+    const originalPrice = Number(item.original_price);
+    const discount = Math.round((1 - productPrice / originalPrice) * 100);
+    const storeName = item.stores?.name || 'Loja';
+    
+    return (
     <TouchableOpacity
       style={[styles.productCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
       onPress={() => router.push(`/product/${item.id}`)}
     >
       <View style={styles.productImageContainer}>
-        <Image source={{ uri: item.image }} style={styles.productImage} />
+        <Image source={{ uri: productImage }} style={styles.productImage} />
         
         {/* Badge de Desconto */}
         <View style={styles.discountBadge}>
-          <Text style={styles.discountText}>{item.discount}% OFF</Text>
+          <Text style={styles.discountText}>{discount}% OFF</Text>
         </View>
         
         {/* Badge de Tempo Limitado */}
         <View style={styles.timeBadge}>
           <Clock size={12} color="#FFFFFF" />
-          <Text style={styles.timeText}>{item.timeLeft}</Text>
+          <Text style={styles.timeText}>Limitado</Text>
         </View>
         
-        {/* Badge de Quantidade Limitada */}
-        {item.limitedQuantity && (
-          <View style={styles.quantityBadge}>
-            <Zap size={12} color="#FFFFFF" />
-            <Text style={styles.quantityText}>Restam {item.limitedQuantity}</Text>
-          </View>
-        )}
+        <View style={styles.quantityBadge}>
+          <Zap size={12} color="#FFFFFF" />
+          <Text style={styles.quantityText}>Oferta</Text>
+        </View>
       </View>
       
       <View style={styles.productInfo}>
-        <Text style={[styles.storeName, { color: colors.textSecondary }]}>{item.store}</Text>
+        <Text style={[styles.storeName, { color: colors.textSecondary }]}>{storeName}</Text>
         <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>
           {item.name}
         </Text>
         
         <View style={styles.ratingContainer}>
           <Star size={14} color="#FFD700" fill="#FFD700" />
-          <Text style={[styles.rating, { color: colors.text }]}>{item.rating}</Text>
-          <Text style={[styles.reviews, { color: colors.textSecondary }]}>({item.reviews})</Text>
+          <Text style={[styles.rating, { color: colors.text }]}>{item.rating || 0}</Text>
+          <Text style={[styles.reviews, { color: colors.textSecondary }]}>({item.reviews_count || 0})</Text>
         </View>
         
         <View style={styles.priceContainer}>
           <Text style={[styles.originalPrice, { color: colors.textSecondary }]}>
-            R$ {item.originalPrice.toFixed(2)}
+            R$ {originalPrice.toFixed(2)}
           </Text>
-          <Text style={styles.price}>R$ {item.price.toFixed(2)}</Text>
+          <Text style={styles.price}>R$ {productPrice.toFixed(2)}</Text>
           <Text style={styles.savings}>
-            Economize R$ {(item.originalPrice - item.price).toFixed(2)}
+            Economize R$ {(originalPrice - productPrice).toFixed(2)}
           </Text>
         </View>
         
-        {item.freeShipping && (
+        {item.free_shipping && (
           <View style={styles.shippingContainer}>
             <Text style={styles.freeShipping}>Frete grátis</Text>
           </View>
@@ -196,7 +141,8 @@ export default function PromotionsScreen() {
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -222,12 +168,23 @@ export default function PromotionsScreen() {
 
       {/* Lista de Produtos em Promoção */}
       <FlatList
-        data={promotionProducts}
+        data={products}
         renderItem={renderPromotionProduct}
         keyExtractor={(item) => item.id}
         numColumns={2}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.productsList}
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Carregando promoções...</Text>
+            </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Nenhuma promoção disponível</Text>
+            </View>
+          )
+        }
       />
     </SafeAreaView>
   );
@@ -417,5 +374,23 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     marginLeft: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
   },
 });

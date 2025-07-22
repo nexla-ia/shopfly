@@ -16,19 +16,6 @@ import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
-interface Store {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  rating: number;
-  reviews: number;
-  category: string;
-  deliveryTime: string;
-  address: string;
-  isOpen: boolean;
-}
-
 const storeCategories = [
   { id: 'all', name: 'Todas' },
   { id: 'supermarket', name: 'Supermercado' },
@@ -41,155 +28,48 @@ const storeCategories = [
   { id: 'food', name: 'Alimentação' },
 ];
 
-const allStores: Store[] = [
-  {
-    id: '1',
-    name: 'TechStore Oficial',
-    description: 'Sua loja de eletrônicos de confiança',
-    image: 'https://images.pexels.com/photos/1036936/pexels-photo-1036936.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.8,
-    reviews: 2847,
-    category: 'electronics',
-    deliveryTime: '30-45 min',
-    address: 'Rua das Tecnologias, 123 - Centro',
-    isOpen: true,
-  },
-  {
-    id: '2',
-    name: 'Supermercado Central',
-    description: 'Produtos frescos todos os dias',
-    image: 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    reviews: 1892,
-    category: 'supermarket',
-    deliveryTime: '20-30 min',
-    address: 'Av. Principal, 456 - Centro',
-    isOpen: true,
-  },
-  {
-    id: '3',
-    name: 'Farmácia Saúde+',
-    description: 'Cuidando da sua saúde 24h',
-    image: 'https://images.pexels.com/photos/305568/pexels-photo-305568.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.9,
-    reviews: 3421,
-    category: 'pharmacy',
-    deliveryTime: '15-25 min',
-    address: 'Rua da Saúde, 789 - Centro',
-    isOpen: true,
-  },
-  {
-    id: '4',
-    name: 'Moda & Estilo',
-    description: 'As últimas tendências da moda',
-    image: 'https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    reviews: 1567,
-    category: 'fashion',
-    deliveryTime: '45-60 min',
-    address: 'Shopping Center, Loja 45',
-    isOpen: true,
-  },
-  {
-    id: '5',
-    name: 'Casa & Decoração',
-    description: 'Transforme seu lar',
-    image: 'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.5,
-    reviews: 892,
-    category: 'home',
-    deliveryTime: '60-90 min',
-    address: 'Rua dos Móveis, 321 - Industrial',
-    isOpen: false,
-  },
-  {
-    id: '6',
-    name: 'Beleza Natural',
-    description: 'Produtos de beleza e cuidados',
-    image: 'https://images.pexels.com/photos/3685530/pexels-photo-3685530.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.8,
-    reviews: 2134,
-    category: 'beauty',
-    deliveryTime: '35-50 min',
-    address: 'Galeria Comercial, Sala 12',
-    isOpen: true,
-  },
-  {
-    id: '7',
-    name: 'Esportes Total',
-    description: 'Tudo para seu esporte favorito',
-    image: 'https://images.pexels.com/photos/100582/pexels-photo-100582.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    reviews: 1245,
-    category: 'sports',
-    deliveryTime: '40-55 min',
-    address: 'Av. dos Esportes, 654 - Zona Norte',
-    isOpen: true,
-  },
-  {
-    id: '8',
-    name: 'Restaurante Sabor & Arte',
-    description: 'Comida caseira com sabor especial',
-    image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.9,
-    reviews: 3876,
-    category: 'food',
-    deliveryTime: '25-40 min',
-    address: 'Praça da Alimentação, 98',
-    isOpen: true,
-  },
-  {
-    id: '9',
-    name: 'Mega Supermercado',
-    description: 'Variedade e preços baixos',
-    image: 'https://images.pexels.com/photos/4199098/pexels-photo-4199098.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.4,
-    reviews: 5432,
-    category: 'supermarket',
-    deliveryTime: '30-45 min',
-    address: 'Rodovia Principal, Km 5',
-    isOpen: true,
-  },
-  {
-    id: '10',
-    name: 'Eletrônica Express',
-    description: 'Tecnologia com entrega rápida',
-    image: 'https://images.pexels.com/photos/1229861/pexels-photo-1229861.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    reviews: 1876,
-    category: 'electronics',
-    deliveryTime: '20-35 min',
-    address: 'Centro Comercial, Bloco B',
-    isOpen: true,
-  },
-];
-
 export default function StoresScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [filteredStores, setFilteredStores] = useState(allStores);
+  const [stores, setStores] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  React.useEffect(() => {
-    filterStores();
+  useEffect(() => {
+    fetchStores();
+  }, []);
+
+  useEffect(() => {
+    fetchStores();
   }, [searchQuery, selectedCategory]);
 
-  const filterStores = () => {
-    let filtered = allStores;
+  const fetchStores = async () => {
+    setLoading(true);
+    
+    let query = supabase
+      .from('stores')
+      .select('*')
+      .eq('is_open', true);
 
     if (searchQuery) {
-      filtered = filtered.filter(store =>
-        store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        store.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      query = query.ilike('name', `%${searchQuery}%`);
     }
 
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(store => store.category === selectedCategory);
+      query = query.eq('category', selectedCategory);
     }
 
-    setFilteredStores(filtered);
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Erro ao buscar lojas:', error);
+      setStores([]);
+    } else {
+      setStores(data || []);
+    }
+    
+    setLoading(false);
   };
 
   const renderCategory = ({ item }: { item: any }) => (
@@ -211,12 +91,12 @@ export default function StoresScreen() {
     </TouchableOpacity>
   );
 
-  const renderStore = ({ item }: { item: Store }) => (
+  const renderStore = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={[styles.storeCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
       onPress={() => router.push(`/store/${item.id}`)}
     >
-      <Image source={{ uri: item.image }} style={styles.storeImage} />
+      <Image source={{ uri: item.image_url }} style={styles.storeImage} />
       
       <View style={styles.storeInfo}>
         <View style={styles.storeHeader}>
@@ -225,29 +105,29 @@ export default function StoresScreen() {
           </Text>
           <View style={[
             styles.statusBadge,
-            { backgroundColor: item.isOpen ? '#10B981' : '#EF4444' }
+            { backgroundColor: item.is_open ? '#10B981' : '#EF4444' }
           ]}>
             <Text style={styles.statusText}>
-              {item.isOpen ? 'Aberto' : 'Fechado'}
+              {item.is_open ? 'Aberto' : 'Fechado'}
             </Text>
           </View>
         </View>
         
         <Text style={[styles.storeDescription, { color: colors.textSecondary }]} numberOfLines={2}>
-          {item.description}
+          {item.description || 'Loja parceira'}
         </Text>
         
         <View style={styles.storeDetails}>
           <View style={styles.ratingContainer}>
             <Star size={14} color="#FFD700" fill="#FFD700" />
-            <Text style={[styles.rating, { color: colors.text }]}>{item.rating}</Text>
-            <Text style={[styles.reviews, { color: colors.textSecondary }]}>({item.reviews})</Text>
+            <Text style={[styles.rating, { color: colors.text }]}>{item.rating || 0}</Text>
+            <Text style={[styles.reviews, { color: colors.textSecondary }]}>({item.reviews_count || 0})</Text>
           </View>
           
           <View style={styles.deliveryContainer}>
             <Clock size={14} color={colors.textSecondary} />
             <Text style={[styles.deliveryTime, { color: colors.textSecondary }]}>
-              {item.deliveryTime}
+              {item.delivery_time || '30-60 min'}
             </Text>
           </View>
         </View>
@@ -255,7 +135,7 @@ export default function StoresScreen() {
         <View style={styles.addressContainer}>
           <MapPin size={12} color={colors.textSecondary} />
           <Text style={[styles.address, { color: colors.textSecondary }]} numberOfLines={1}>
-            {item.address}
+            {item.address || 'Endereço não informado'}
           </Text>
         </View>
       </View>
@@ -302,17 +182,28 @@ export default function StoresScreen() {
       {/* Results */}
       <View style={[styles.resultsContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <Text style={[styles.resultsText, { color: colors.textSecondary }]}>
-          {filteredStores.length} lojas encontradas
+          {loading ? 'Buscando...' : `${stores.length} lojas encontradas`}
         </Text>
       </View>
 
       {/* Stores List */}
       <FlatList
-        data={filteredStores}
+        data={stores}
         renderItem={renderStore}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.storesList}
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Carregando lojas...</Text>
+            </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Nenhuma loja encontrada</Text>
+            </View>
+          )
+        }
       />
     </SafeAreaView>
   );
@@ -467,5 +358,23 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontSize: 12,
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
   },
 });

@@ -15,105 +15,6 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, Star, Search, Filter, CreditCard as Edit3, Trash2, Camera, Send } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 
-interface Review {
-  id: string;
-  productId: string;
-  productName: string;
-  productImage: string;
-  rating: number;
-  comment: string;
-  date: string;
-  status: 'published' | 'pending' | 'rejected';
-  helpful: number;
-  store: string;
-  canEdit: boolean;
-  images?: string[];
-}
-
-interface PendingReview {
-  id: string;
-  productId: string;
-  productName: string;
-  productImage: string;
-  store: string;
-  purchaseDate: string;
-}
-
-const mockReviews: Review[] = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440101',
-    productId: '550e8400-e29b-41d4-a716-446655440001',
-    productName: 'iPhone 15 Pro Max 256GB',
-    productImage: 'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 5,
-    comment: 'Produto excelente! Superou minhas expectativas. A qualidade da câmera é incrível e a bateria dura o dia todo.',
-    date: '15/01/2024',
-    status: 'published',
-    helpful: 23,
-    store: 'Apple Store Oficial',
-    canEdit: true,
-    images: ['https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=200'],
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440102',
-    productId: '550e8400-e29b-41d4-a716-446655440002',
-    productName: 'MacBook Air M2 13"',
-    productImage: 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4,
-    comment: 'Muito bom para trabalho. Rápido e silencioso. Apenas a tela poderia ser um pouco maior.',
-    date: '10/01/2024',
-    status: 'published',
-    helpful: 15,
-    store: 'Apple Store Oficial',
-    canEdit: true,
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440103',
-    productId: '550e8400-e29b-41d4-a716-446655440003',
-    productName: 'AirPods Pro 2ª Geração',
-    productImage: 'https://images.pexels.com/photos/3394650/pexels-photo-3394650.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 5,
-    comment: 'Som perfeito! O cancelamento de ruído é impressionante.',
-    date: '05/01/2024',
-    status: 'published',
-    helpful: 31,
-    store: 'Apple Store Oficial',
-    canEdit: false,
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440104',
-    productId: '550e8400-e29b-41d4-a716-446655440005',
-    productName: 'Monitor Gamer ASUS 27"',
-    productImage: 'https://images.pexels.com/photos/777001/pexels-photo-777001.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 3,
-    comment: 'Produto chegou com defeito na embalagem.',
-    date: '28/12/2023',
-    status: 'pending',
-    helpful: 0,
-    store: 'ASUS Store',
-    canEdit: true,
-  },
-];
-
-const mockPendingReviews: PendingReview[] = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440105',
-    productId: '550e8400-e29b-41d4-a716-446655440004',
-    productName: 'Samsung Galaxy S24 Ultra',
-    productImage: 'https://images.pexels.com/photos/1194713/pexels-photo-1194713.jpeg?auto=compress&cs=tinysrgb&w=400',
-    store: 'Samsung Oficial',
-    purchaseDate: '20/01/2024',
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440106',
-    productId: '550e8400-e29b-41d4-a716-446655440006',
-    productName: 'Teclado Mecânico Logitech',
-    productImage: 'https://images.pexels.com/photos/2115256/pexels-photo-2115256.jpeg?auto=compress&cs=tinysrgb&w=400',
-    store: 'Logitech Store',
-    purchaseDate: '18/01/2024',
-  },
-];
-
 const statusConfig = {
   published: { label: 'Publicada', color: '#10B981', bgColor: '#D1FAE5' },
   pending: { label: 'Pendente', color: '#F59E0B', bgColor: '#FEF3C7' },
@@ -125,33 +26,98 @@ export default function ReviewsScreen() {
   const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<'published' | 'pending'>('published');
   const [searchQuery, setSearchQuery] = useState('');
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [pendingReviews, setPendingReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<PendingReview | null>(null);
-  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [editingReview, setEditingReview] = useState<any>(null);
   const [reviewForm, setReviewForm] = useState({
     rating: 0,
     comment: '',
     images: [] as string[],
   });
 
-  const filteredReviews = mockReviews.filter(review =>
-    review.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    review.store.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    fetchReviews();
+    fetchPendingReviews();
+  }, []);
+
+  const fetchReviews = async () => {
+    setLoading(true);
+    
+    const { data, error } = await supabase
+      .from('reviews')
+      .select(`
+        id,
+        rating,
+        comment,
+        status,
+        helpful_count,
+        images,
+        created_at,
+        products (
+          id,
+          name,
+          images
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao buscar reviews:', error);
+      setReviews([]);
+    } else {
+      setReviews(data || []);
+    }
+    
+    setLoading(false);
+  };
+
+  const fetchPendingReviews = async () => {
+    // Buscar produtos comprados que ainda não foram avaliados
+    const { data, error } = await supabase
+      .from('order_items')
+      .select(`
+        id,
+        products (
+          id,
+          name,
+          images
+        ),
+        orders (
+          id,
+          created_at,
+          status
+        )
+      `)
+      .eq('orders.status', 'delivered')
+      .limit(10);
+
+    if (error) {
+      console.error('Erro ao buscar produtos para avaliar:', error);
+      setPendingReviews([]);
+    } else {
+      setPendingReviews(data || []);
+    }
+  };
+
+  const filteredReviews = reviews.filter(review =>
+    review.products?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredPendingReviews = mockPendingReviews.filter(product =>
-    product.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.store.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPendingReviews = pendingReviews.filter(item =>
+    item.products?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleWriteReview = (product: PendingReview) => {
+  const handleWriteReview = (product: any) => {
     setSelectedProduct(product);
     setEditingReview(null);
     setReviewForm({ rating: 0, comment: '', images: [] });
     setShowReviewModal(true);
   };
 
-  const handleEditReview = (review: Review) => {
+  const handleEditReview = (review: any) => {
     setEditingReview(review);
     setSelectedProduct(null);
     setReviewForm({
@@ -212,21 +178,23 @@ export default function ReviewsScreen() {
     </View>
   );
 
-  const renderReview = ({ item }: { item: Review }) => {
-    const status = statusConfig[item.status];
+  const renderReview = ({ item }: { item: any }) => {
+    const status = statusConfig[item.status as keyof typeof statusConfig];
     
     return (
       <View style={[styles.reviewCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.reviewHeader}>
-          <Image source={{ uri: item.productImage }} style={styles.productImage} />
+          <Image source={{ uri: item.products?.images?.[0] || '' }} style={styles.productImage} />
           <View style={styles.reviewInfo}>
             <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>
-              {item.productName}
+              {item.products?.name || 'Produto'}
             </Text>
-            <Text style={[styles.storeName, { color: colors.textSecondary }]}>{item.store}</Text>
+            <Text style={[styles.storeName, { color: colors.textSecondary }]}>ShopFly</Text>
             <View style={styles.reviewMeta}>
               {renderStars(item.rating)}
-              <Text style={[styles.reviewDate, { color: colors.textSecondary }]}>{item.date}</Text>
+              <Text style={[styles.reviewDate, { color: colors.textSecondary }]}>
+                {new Date(item.created_at).toLocaleDateString('pt-BR')}
+              </Text>
             </View>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: status.bgColor }]}>
@@ -246,10 +214,10 @@ export default function ReviewsScreen() {
 
         <View style={styles.reviewFooter}>
           <Text style={[styles.helpfulText, { color: colors.textSecondary }]}>
-            👍 {item.helpful} pessoas acharam útil
+            👍 {item.helpful_count || 0} pessoas acharam útil
           </Text>
           
-          {item.canEdit && (
+          {item.status === 'pending' && (
             <View style={styles.reviewActions}>
               <TouchableOpacity
                 style={styles.actionButton}
@@ -272,16 +240,16 @@ export default function ReviewsScreen() {
     );
   };
 
-  const renderPendingReview = ({ item }: { item: PendingReview }) => (
+  const renderPendingReview = ({ item }: { item: any }) => (
     <View style={[styles.pendingCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Image source={{ uri: item.productImage }} style={styles.productImage} />
+      <Image source={{ uri: item.products?.images?.[0] || '' }} style={styles.productImage} />
       <View style={styles.pendingInfo}>
         <Text style={[styles.productName, { color: colors.text }]} numberOfLines={2}>
-          {item.productName}
+          {item.products?.name || 'Produto'}
         </Text>
-        <Text style={[styles.storeName, { color: colors.textSecondary }]}>{item.store}</Text>
+        <Text style={[styles.storeName, { color: colors.textSecondary }]}>ShopFly</Text>
         <Text style={[styles.purchaseDate, { color: colors.textSecondary }]}>
-          Comprado em {item.purchaseDate}
+          Comprado em {new Date(item.orders?.created_at).toLocaleDateString('pt-BR')}
         </Text>
       </View>
       <TouchableOpacity
@@ -412,15 +380,15 @@ export default function ReviewsScreen() {
             {(selectedProduct || editingReview) && (
               <View style={styles.productInfo}>
                 <Image 
-                  source={{ uri: selectedProduct?.productImage || editingReview?.productImage }} 
+                  source={{ uri: selectedProduct?.products?.images?.[0] || editingReview?.products?.images?.[0] || '' }} 
                   style={styles.modalProductImage} 
                 />
                 <View>
                   <Text style={[styles.modalProductName, { color: colors.text }]}>
-                    {selectedProduct?.productName || editingReview?.productName}
+                    {selectedProduct?.products?.name || editingReview?.products?.name || 'Produto'}
                   </Text>
                   <Text style={[styles.modalStoreName, { color: colors.textSecondary }]}>
-                    {selectedProduct?.store || editingReview?.store}
+                    ShopFly
                   </Text>
                 </View>
               </View>

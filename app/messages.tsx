@@ -12,84 +12,80 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, MessageCircle, Clock } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 
-interface Chat {
-  id: string;
-  storeName: string;
-  storeImage: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  isOnline: boolean;
-}
-
-const mockChats: Chat[] = [
-  {
-    id: '1',
-    storeName: 'Loja de Eletrônicos Tech',
-    storeImage: 'https://images.pexels.com/photos/1036936/pexels-photo-1036936.jpeg?auto=compress&cs=tinysrgb&w=400',
-    lastMessage: 'Seu pedido está sendo preparado!',
-    timestamp: '14:30',
-    unreadCount: 2,
-    isOnline: true,
-  },
-  {
-    id: '2',
-    storeName: 'Supermercado Central',
-    storeImage: 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=400',
-    lastMessage: 'Obrigado pela compra! Avalie nosso atendimento.',
-    timestamp: '12:15',
-    unreadCount: 0,
-    isOnline: false,
-  },
-  {
-    id: '3',
-    storeName: 'Farmácia Saúde+',
-    storeImage: 'https://images.pexels.com/photos/305568/pexels-photo-305568.jpeg?auto=compress&cs=tinysrgb&w=400',
-    lastMessage: 'Temos o medicamento em estoque.',
-    timestamp: 'Ontem',
-    unreadCount: 1,
-    isOnline: true,
-  },
-];
-
 export default function MessagesScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const [chats] = useState(mockChats);
+  const [chats, setChats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const renderChatItem = ({ item }: { item: Chat }) => (
+  useEffect(() => {
+    fetchChats();
+  }, []);
+
+  const fetchChats = async () => {
+    setLoading(true);
+    
+    const { data, error } = await supabase
+      .from('chats')
+      .select(`
+        id,
+        last_message,
+        last_message_at,
+        unread_count,
+        stores (
+          id,
+          name,
+          image_url
+        )
+      `)
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao buscar chats:', error);
+      setChats([]);
+    } else {
+      setChats(data || []);
+    }
+    
+    setLoading(false);
+  };
+
+  const renderChatItem = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={[styles.chatItem, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}
       onPress={() => router.push(`/chat/${item.id}`)}
     >
       <View style={styles.chatLeft}>
         <View style={styles.storeImageContainer}>
-          <Image source={{ uri: item.storeImage }} style={styles.storeImage} />
-          {item.isOnline && <View style={styles.onlineIndicator} />}
+          <Image source={{ uri: item.stores?.image_url || '' }} style={styles.storeImage} />
+          <View style={styles.onlineIndicator} />
         </View>
         
         <View style={styles.chatInfo}>
-          <Text style={[styles.storeName, { color: colors.text }]}>{item.storeName}</Text>
+          <Text style={[styles.storeName, { color: colors.text }]}>{item.stores?.name || 'Loja'}</Text>
           <Text 
             style={[
               styles.lastMessage, 
-              { color: item.unreadCount > 0 ? colors.text : colors.textSecondary }
+              { color: (item.unread_count || 0) > 0 ? colors.text : colors.textSecondary }
             ]}
             numberOfLines={1}
           >
-            {item.lastMessage}
+            {item.last_message || 'Sem mensagens'}
           </Text>
         </View>
       </View>
       
       <View style={styles.chatRight}>
         <Text style={[styles.timestamp, { color: colors.textSecondary }]}>
-          {item.timestamp}
+          {item.last_message_at ? new Date(item.last_message_at).toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }) : ''}
         </Text>
-        {item.unreadCount > 0 && (
+        {(item.unread_count || 0) > 0 && (
           <View style={[styles.unreadBadge, { backgroundColor: colors.primary }]}>
             <Text style={styles.unreadText}>
-              {item.unreadCount > 99 ? '99+' : item.unreadCount}
+              {(item.unread_count || 0) > 99 ? '99+' : (item.unread_count || 0)}
             </Text>
           </View>
         )}
@@ -127,7 +123,11 @@ export default function MessagesScreen() {
       </View>
 
       {/* Chat List */}
-      {chats.length === 0 ? (
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Carregando conversas...</Text>
+        </View>
+      ) : chats.length === 0 ? (
         renderEmptyChats()
       ) : (
         <FlatList
@@ -254,5 +254,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
   },
 });
