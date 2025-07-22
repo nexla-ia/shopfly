@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Clock, CircleCheck as CheckCircle, Package, Truck, Calendar, ArrowLeft } from 'lucide-react-native';
+import { supabase } from '../../lib/supabase';
 
 const statusConfig = {
   pending: {
