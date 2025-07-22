@@ -14,6 +14,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Search, Filter, Star, ShoppingCart, ArrowLeft } from 'lucide-react-native';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 
 const { width } = Dimensions.get('window');
 
