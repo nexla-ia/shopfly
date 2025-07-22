@@ -65,105 +65,6 @@ const categories: Category[] = [
   { id: 'sports', name: 'Esportes', icon: '⚽', color: '#EF4444' },
 ];
 
-// Remover o array featuredStores
-
-// Adicionar estado para lojas reais
-const [stores, setStores] = useState<Store[]>([]);
-const [loadingStores, setLoadingStores] = useState(false);
-
-// Buscar lojas reais do Supabase ao montar o componente
-useEffect(() => {
-  const fetchStores = async () => {
-    setLoadingStores(true);
-    const { data, error } = await supabase
-      .from('stores')
-      .select(`
-        id,
-        name,
-        description,
-        image_url,
-        category,
-        rating,
-        delivery_time
-      `)
-      .eq('is_open', true)
-      .limit(5);
-
-    if (error) {
-      console.error('Erro ao buscar lojas:', error);
-      setLoadingStores(false);
-      return;
-    }
-
-    // Mapear os dados do Supabase para o tipo Store do front
-    const mapped = (data || []).map((item: any) => ({
-      id: item.id,
-      name: item.name,
-      description: item.description,
-      image: item.image_url,
-      rating: item.rating || 0,
-      category: item.category,
-      deliveryTime: item.delivery_time
-    }));
-
-    setStores(mapped);
-    setLoadingStores(false);
-  };
-
-  fetchStores();
-}, []);
-
-// Adicionar estado para produtos reais
-const [products, setProducts] = useState<Product[]>([]);
-const [loadingProducts, setLoadingProducts] = useState(false);
-
-// Buscar produtos reais do Supabase ao montar o componente
-useEffect(() => {
-  const fetchProducts = async () => {
-    setLoadingProducts(true);
-    const { data, error } = await supabase
-      .from('products')
-      .select(`
-        id,
-        name,
-        price,
-        original_price,
-        images,
-        rating,
-        reviews_count,
-        free_shipping,
-        installments,
-        category,
-        stores ( name )
-      `)
-      .eq('is_active', true)
-      .limit(20);
-    if (error) {
-      console.error('Erro ao buscar produtos:', error);
-      setLoadingProducts(false);
-      return;
-    }
-    // Mapear os dados do Supabase para o tipo Product do front
-    const mapped = (data || []).map((item: any) => ({
-      id: item.id,
-      name: item.name,
-      price: Number(item.price),
-      originalPrice: item.original_price ? Number(item.original_price) : undefined,
-      image: item.images && item.images.length > 0 ? item.images[0] : '',
-      discount: item.original_price ? Math.round((1 - item.price / item.original_price) * 100) : undefined,
-      rating: item.rating || 0,
-      reviews: item.reviews_count || 0,
-      store: item.stores?.name || 'Loja',
-      freeShipping: item.free_shipping || false,
-      installments: item.installments,
-      category: item.category,
-    }));
-    setProducts(mapped);
-    setLoadingProducts(false);
-  };
-  fetchProducts();
-}, []);
-
 export default function HomeScreen() {
   const router = useRouter();
   
@@ -172,12 +73,109 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const { currentCity, loading: locationLoading, requestLocationPermission } = useLocationContext();
   const { user, profile } = useAuth();
+  
+  // Estados para dados do Supabase
+  const [stores, setStores] = useState<Store[]>([]);
+  const [loadingStores, setLoadingStores] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  
+  // Estados da UI
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activeOrdersCount, setActiveOrdersCount] = useState(2); // Simular pedidos ativos
   const [unreadChatsCount, setUnreadChatsCount] = useState(3); // Simular chats não lidos
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
   const scrollX = new Animated.Value(0);
+
+  // Buscar lojas reais do Supabase ao montar o componente
+  useEffect(() => {
+    const fetchStores = async () => {
+      setLoadingStores(true);
+      const { data, error } = await supabase
+        .from('stores')
+        .select(`
+          id,
+          name,
+          description,
+          image_url,
+          category,
+          rating,
+          delivery_time
+        `)
+        .eq('is_open', true)
+        .limit(5);
+
+      if (error) {
+        console.error('Erro ao buscar lojas:', error);
+        setLoadingStores(false);
+        return;
+      }
+
+      // Mapear os dados do Supabase para o tipo Store do front
+      const mapped = (data || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        image: item.image_url,
+        rating: item.rating || 0,
+        category: item.category,
+        deliveryTime: item.delivery_time
+      }));
+
+      setStores(mapped);
+      setLoadingStores(false);
+    };
+
+    fetchStores();
+  }, []);
+
+  // Buscar produtos reais do Supabase ao montar o componente
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoadingProducts(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          id,
+          name,
+          price,
+          original_price,
+          images,
+          rating,
+          reviews_count,
+          free_shipping,
+          installments,
+          category,
+          stores ( name )
+        `)
+        .eq('is_active', true)
+        .limit(20);
+      if (error) {
+        console.error('Erro ao buscar produtos:', error);
+        setLoadingProducts(false);
+        return;
+      }
+      // Mapear os dados do Supabase para o tipo Product do front
+      const mapped = (data || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        price: Number(item.price),
+        originalPrice: item.original_price ? Number(item.original_price) : undefined,
+        image: item.images && item.images.length > 0 ? item.images[0] : '',
+        discount: item.original_price ? Math.round((1 - item.price / item.original_price) * 100) : undefined,
+        rating: item.rating || 0,
+        reviews: item.reviews_count || 0,
+        store: item.stores?.name || 'Loja',
+        freeShipping: item.free_shipping || false,
+        installments: item.installments,
+        category: item.category,
+      }));
+      setProducts(mapped);
+      setLoadingProducts(false);
+    };
+    fetchProducts();
+  }, []);
 
   // Promoções em destaque
   const promotions = [
