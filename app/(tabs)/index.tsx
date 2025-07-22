@@ -20,6 +20,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLocationContext } from '@/context/LocationContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 const { width } = Dimensions.get('window');
 
@@ -112,229 +113,56 @@ const featuredStores: Store[] = [
   }
 ];
 
-const featuredProducts: Product[] = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440001',
-    name: 'iPhone 15 Pro Max 256GB Titânio Natural',
-    price: 8999.99,
-    originalPrice: 9999.99,
-    discount: 10,
-    image: 'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.8,
-    reviews: 1247,
-    store: 'Apple Store Oficial',
-    freeShipping: true,
-    installments: 'em 12x R$ 749,99',
-    category: 'electronics'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440002',
-    name: 'MacBook Air M2 13" 256GB Space Gray',
-    price: 7299.99,
-    originalPrice: 7999.99,
-    discount: 9,
-    image: 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.9,
-    reviews: 892,
-    store: 'Apple Store Oficial',
-    freeShipping: true,
-    installments: 'em 12x R$ 608,33',
-    category: 'electronics'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440003',
-    name: 'AirPods Pro 2ª Geração com Case MagSafe',
-    price: 1899.99,
-    originalPrice: 2199.99,
-    discount: 14,
-    image: 'https://images.pexels.com/photos/3394650/pexels-photo-3394650.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    reviews: 2156,
-    store: 'Apple Store Oficial',
-    freeShipping: true,
-    installments: 'em 10x R$ 189,99',
-    category: 'electronics'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440004',
-    name: 'Samsung Galaxy S24 Ultra 512GB Preto',
-    price: 6799.99,
-    originalPrice: 7499.99,
-    discount: 9,
-    image: 'https://images.pexels.com/photos/1194713/pexels-photo-1194713.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    reviews: 1834,
-    store: 'Samsung Oficial',
-    freeShipping: true,
-    installments: 'em 12x R$ 566,66',
-    category: 'electronics'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440005',
-    name: 'Monitor Gamer ASUS 27" 144Hz IPS',
-    price: 1299.99,
-    originalPrice: 1599.99,
-    discount: 19,
-    image: 'https://images.pexels.com/photos/777001/pexels-photo-777001.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.5,
-    reviews: 567,
-    store: 'ASUS Store',
-    freeShipping: true,
-    installments: 'em 12x R$ 108,33',
-    category: 'electronics'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440006',
-    name: 'Teclado Mecânico Logitech MX Keys',
-    price: 599.99,
-    originalPrice: 699.99,
-    discount: 14,
-    image: 'https://images.pexels.com/photos/2115256/pexels-photo-2115256.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.4,
-    reviews: 892,
-    store: 'Logitech Store',
-    freeShipping: true,
-    installments: 'em 6x R$ 99,99',
-    category: 'electronics'
-  },
-  // Produtos de Supermercado
-  {
-    id: '550e8400-e29b-41d4-a716-446655440007',
-    name: 'Arroz Integral Tio João 1kg',
-    price: 8.99,
-    image: 'https://images.pexels.com/photos/33239/rice-grain-food-raw.jpg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.5,
-    reviews: 234,
-    store: 'Supermercado Central',
-    freeShipping: true,
-    category: 'supermarket'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440008',
-    name: 'Feijão Preto Camil 1kg',
-    price: 7.49,
-    image: 'https://images.pexels.com/photos/4198564/pexels-photo-4198564.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    reviews: 189,
-    store: 'Supermercado Central',
-    freeShipping: true,
-    category: 'supermarket'
-  },
-  // Produtos de Casa
-  {
-    id: '550e8400-e29b-41d4-a716-446655440009',
-    name: 'Sofá 3 Lugares Cinza Moderno',
-    price: 1299.99,
-    originalPrice: 1599.99,
-    discount: 19,
-    image: 'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    reviews: 156,
-    store: 'Casa & Decoração',
-    freeShipping: true,
-    installments: 'em 12x R$ 108,33',
-    category: 'home'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440010',
-    name: 'Mesa de Jantar 6 Lugares Madeira',
-    price: 899.99,
-    originalPrice: 1199.99,
-    discount: 25,
-    image: 'https://images.pexels.com/photos/1080721/pexels-photo-1080721.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.4,
-    reviews: 98,
-    store: 'Casa & Decoração',
-    freeShipping: true,
-    installments: 'em 10x R$ 89,99',
-    category: 'home'
-  },
-  // Produtos de Moda
-  {
-    id: '550e8400-e29b-41d4-a716-446655440011',
-    name: 'Vestido Floral Verão Feminino',
-    price: 89.99,
-    originalPrice: 129.99,
-    discount: 31,
-    image: 'https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    reviews: 267,
-    store: 'Moda & Estilo',
-    freeShipping: true,
-    installments: 'em 3x R$ 29,99',
-    category: 'fashion'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440012',
-    name: 'Tênis Esportivo Masculino Preto',
-    price: 199.99,
-    originalPrice: 249.99,
-    discount: 20,
-    image: 'https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.5,
-    reviews: 445,
-    store: 'Moda & Estilo',
-    freeShipping: true,
-    installments: 'em 4x R$ 49,99',
-    category: 'fashion'
-  },
-  // Produtos de Beleza
-  {
-    id: '550e8400-e29b-41d4-a716-446655440013',
-    name: 'Kit Skincare Facial Completo',
-    price: 149.99,
-    originalPrice: 199.99,
-    discount: 25,
-    image: 'https://images.pexels.com/photos/3685530/pexels-photo-3685530.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.8,
-    reviews: 523,
-    store: 'Beleza Natural',
-    freeShipping: true,
-    installments: 'em 5x R$ 29,99',
-    category: 'beauty'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440014',
-    name: 'Perfume Feminino Floral 100ml',
-    price: 89.99,
-    image: 'https://images.pexels.com/photos/965989/pexels-photo-965989.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    reviews: 312,
-    store: 'Beleza Natural',
-    freeShipping: true,
-    installments: 'em 3x R$ 29,99',
-    category: 'beauty'
-  },
-  // Produtos de Esportes
-  {
-    id: '550e8400-e29b-41d4-a716-446655440015',
-    name: 'Bicicleta Mountain Bike Aro 29',
-    price: 1599.99,
-    originalPrice: 1999.99,
-    discount: 20,
-    image: 'https://images.pexels.com/photos/100582/pexels-photo-100582.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    reviews: 178,
-    store: 'Esportes Total',
-    freeShipping: true,
-    installments: 'em 12x R$ 133,33',
-    category: 'sports'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440016',
-    name: 'Kit Halteres 20kg Musculação',
-    price: 299.99,
-    originalPrice: 399.99,
-    discount: 25,
-    image: 'https://images.pexels.com/photos/416717/pexels-photo-416717.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.4,
-    reviews: 89,
-    store: 'Esportes Total',
-    freeShipping: true,
-    installments: 'em 6x R$ 49,99',
-    category: 'sports'
-  }
-];
+// Adicionar estado para produtos reais
+const [products, setProducts] = useState<Product[]>([]);
+const [loadingProducts, setLoadingProducts] = useState(false);
+
+// Buscar produtos reais do Supabase ao montar o componente
+useEffect(() => {
+  const fetchProducts = async () => {
+    setLoadingProducts(true);
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        id,
+        name,
+        price,
+        original_price,
+        images,
+        rating,
+        reviews_count,
+        free_shipping,
+        installments,
+        category,
+        stores ( name )
+      `)
+      .eq('is_active', true)
+      .limit(20);
+    if (error) {
+      console.error('Erro ao buscar produtos:', error);
+      setLoadingProducts(false);
+      return;
+    }
+    // Mapear os dados do Supabase para o tipo Product do front
+    const mapped = (data || []).map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      price: Number(item.price),
+      originalPrice: item.original_price ? Number(item.original_price) : undefined,
+      image: item.images && item.images.length > 0 ? item.images[0] : '',
+      discount: item.original_price ? Math.round((1 - item.price / item.original_price) * 100) : undefined,
+      rating: item.rating || 0,
+      reviews: item.reviews_count || 0,
+      store: item.stores?.name || 'Loja',
+      freeShipping: item.free_shipping || false,
+      installments: item.installments,
+      category: item.category,
+    }));
+    setProducts(mapped);
+    setLoadingProducts(false);
+  };
+  fetchProducts();
+}, []);
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -381,8 +209,9 @@ export default function HomeScreen() {
 
   const cartItemCount = getCartItemCount();
 
+  // Atualizar toggleFavorite para usar products
   const toggleFavorite = async (productId: string) => {
-    const product = featuredProducts.find(p => p.id === productId);
+    const product = products.find(p => p.id === productId);
     if (!product) return;
 
     if (favoritesLoading) return; // Evitar múltiplos cliques
@@ -721,12 +550,13 @@ export default function HomeScreen() {
           </View>
           
           <FlatList
-            data={featuredProducts}
+            data={products}
             renderItem={renderProduct}
             keyExtractor={(item) => item.id}
             numColumns={2}
             scrollEnabled={false}
             contentContainerStyle={styles.productsGrid}
+            ListEmptyComponent={loadingProducts ? <Text>Carregando produtos...</Text> : <Text>Nenhum produto encontrado.</Text>}
           />
         </View>
 
@@ -737,7 +567,7 @@ export default function HomeScreen() {
           </View>
           
           <FlatList
-            data={featuredProducts.slice(0, 4)}
+            data={products.slice(0, 4)}
             renderItem={renderProduct}
             keyExtractor={(item) => item.id}
             numColumns={2}
@@ -753,7 +583,7 @@ export default function HomeScreen() {
           </View>
           
           <FlatList
-            data={featuredProducts.slice(2, 6)}
+            data={products.slice(2, 6)}
             renderItem={renderProduct}
             keyExtractor={(item) => item.id}
             numColumns={2}
