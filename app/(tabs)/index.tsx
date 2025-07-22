@@ -65,53 +65,53 @@ const categories: Category[] = [
   { id: 'sports', name: 'Esportes', icon: '⚽', color: '#EF4444' },
 ];
 
-const featuredStores: Store[] = [
-  {
-    id: '1',
-    name: 'TechStore Oficial',
-    description: 'Sua loja de eletrônicos de confiança',
-    image: 'https://images.pexels.com/photos/1036936/pexels-photo-1036936.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.8,
-    category: 'Eletrônicos',
-    deliveryTime: '30-45 min'
-  },
-  {
-    id: '2',
-    name: 'Supermercado Central',
-    description: 'Produtos frescos todos os dias',
-    image: 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.6,
-    category: 'Supermercado',
-    deliveryTime: '20-30 min'
-  },
-  {
-    id: '3',
-    name: 'Farmácia Saúde+',
-    description: 'Cuidando da sua saúde 24h',
-    image: 'https://images.pexels.com/photos/305568/pexels-photo-305568.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.9,
-    category: 'Farmácia',
-    deliveryTime: '15-25 min'
-  },
-  {
-    id: '4',
-    name: 'Moda & Estilo',
-    description: 'As últimas tendências da moda',
-    image: 'https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.7,
-    category: 'Moda',
-    deliveryTime: '45-60 min'
-  },
-  {
-    id: '5',
-    name: 'Casa & Decoração',
-    description: 'Transforme seu lar',
-    image: 'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=400',
-    rating: 4.5,
-    category: 'Casa',
-    deliveryTime: '60-90 min'
-  }
-];
+// Remover o array featuredStores
+
+// Adicionar estado para lojas reais
+const [stores, setStores] = useState<Store[]>([]);
+const [loadingStores, setLoadingStores] = useState(false);
+
+// Buscar lojas reais do Supabase ao montar o componente
+useEffect(() => {
+  const fetchStores = async () => {
+    setLoadingStores(true);
+    const { data, error } = await supabase
+      .from('stores')
+      .select(`
+        id,
+        name,
+        description,
+        image_url,
+        category,
+        rating,
+        delivery_time
+      `)
+      .eq('is_open', true)
+      .limit(5);
+
+    if (error) {
+      console.error('Erro ao buscar lojas:', error);
+      setLoadingStores(false);
+      return;
+    }
+
+    // Mapear os dados do Supabase para o tipo Store do front
+    const mapped = (data || []).map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      image: item.image_url,
+      rating: item.rating || 0,
+      category: item.category,
+      deliveryTime: item.delivery_time
+    }));
+
+    setStores(mapped);
+    setLoadingStores(false);
+  };
+
+  fetchStores();
+}, []);
 
 // Adicionar estado para produtos reais
 const [products, setProducts] = useState<Product[]>([]);
@@ -531,12 +531,13 @@ export default function HomeScreen() {
           </View>
           
           <FlatList
-            data={featuredStores}
+            data={stores}
             renderItem={renderStore}
             keyExtractor={(item) => item.id}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.storesList}
+            ListEmptyComponent={loadingStores ? <Text>Carregando lojas...</Text> : <Text>Nenhuma loja encontrada.</Text>}
           />
         </View>
 
