@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, MessageCircle, Clock } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 
 export default function MessagesScreen() {
   const router = useRouter();
