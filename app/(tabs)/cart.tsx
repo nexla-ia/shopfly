@@ -12,11 +12,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Plus, Minus, Trash2, ShoppingCart, Package } from 'lucide-react-native';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function CartScreen() {
   const router = useRouter();
-  const { cartItems, updateQuantity, removeFromCart, getCartTotal } = useCart();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { cartItems, updateQuantity, removeFromCart, getCartTotal, loading } = useCart();
+  const { user } = useAuth();
 
   const handleQuantityChange = (itemId: string, newQuantity: number) => {
     if (newQuantity === 0) {
@@ -77,13 +78,22 @@ export default function CartScreen() {
   const renderEmptyCart = () => (
     <View style={styles.emptyCart}>
       <ShoppingCart size={80} color="#E5E7EB" />
-      <Text style={styles.emptyCartTitle}>Carrinho vazio</Text>
-      <Text style={styles.emptyCartText}>Adicione produtos para começar suas compras</Text>
+      <Text style={styles.emptyCartTitle}>
+        {!user ? 'Faça login para sincronizar carrinho' : 'Carrinho vazio'}
+      </Text>
+      <Text style={styles.emptyCartText}>
+        {!user 
+          ? 'Entre na sua conta para salvar produtos no carrinho' 
+          : 'Adicione produtos para começar suas compras'
+        }
+      </Text>
       <TouchableOpacity
         style={styles.shopButton}
-        onPress={() => router.push('/search')}
+        onPress={() => !user ? router.push('/auth/welcome') : router.push('/(tabs)/search')}
       >
-        <Text style={styles.shopButtonText}>Começar a comprar</Text>
+        <Text style={styles.shopButtonText}>
+          {!user ? 'Fazer login' : 'Começar a comprar'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -97,6 +107,9 @@ export default function CartScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Meu Carrinho</Text>
         <View style={styles.headerRight}>
+          {loading && (
+            <Text style={styles.loadingText}>Sincronizando...</Text>
+          )}
           <Text style={styles.itemCount}>
             {cartItems.length} {cartItems.length === 1 ? 'item' : 'itens'}
           </Text>
@@ -179,6 +192,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#E0E7FF',
     fontWeight: '500',
+  },
+  loadingText: {
+    fontSize: 12,
+    color: '#E0E7FF',
+    fontStyle: 'italic',
   },
   ordersButton: {
     padding: 4,
